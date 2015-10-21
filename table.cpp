@@ -16,19 +16,34 @@ float r = 0.2;
 
 float xedge = 9.0f, yedge = 3.6f;//桌子
 
-float wx = 0, wy = 0;//母球
-float wspeed = 0.08f;
+//母球
+float wx = 0, wy = 0;
+float wspeed = 0.018f;
+float wspeed_delta = 0.00002f;
+float wspeed_edge = 0.018f;
 int wflag = 0;
 
-float x2 = 1.0f, y2 = 3.0f;//移动球
-float x3 = 2.0f, y3 = -2.5f;
-int eflag2 = 1;
-int eflag3 = 1;
-int rotate2 = rand(360);
-int rotate3 = rand(360);
-float nspeed = 0.04f;
+//移动球
+float mspeed_edge = 0.008f;//最小恒定速度
+float mspeed[6];//当前速度
+float mspeed_delta = 0.00002f;//衰减/增加速度
+float movex[6], movey[6];
+int moveflag[6];//是否存在
+float moverotate[6];
+int movex_edge = 6, movey_edge = 2;
 
-float gx = 0.0f, gy = 0.0f, gz = -3.5f;//金球
+//鬼球
+float gspeed[6];
+float gspeed_delta = 0.00004f;
+float ghostx[6], ghosty[6];
+int ghostflag[6];
+float ghostrotate[6];
+
+
+//金球
+float gx = 0.0f, gy = 0.0f, gz = -3.5f;
+
+
 float fScale = 1.0f;
 
 const GLfloat PI = 3.14;
@@ -49,6 +64,35 @@ static GLfloat celength = 10.0f;
 static GLfloat mSpeed = 0.04f;
 static GLfloat rSpeed = 0.02f;
 static GLfloat lSpeed = 0.04f;
+
+void moveball_init(){
+	for (int i = 0; i < 6; i++){
+		mspeed[i] = mspeed_edge;
+		if (i % 2 == 0){
+			movex[i] = -1 * rand(movex_edge*10) / 10;
+			movey[i] = rand(movey_edge*10) / 10;
+		}
+		else{
+			movex[i] = rand(movex_edge*10) / 10;
+			movey[i] = -1 * rand(movey_edge*10) / 10;
+		}
+		moveflag[i] = 1;
+		moverotate[i] = rand(360);
+	}
+}
+void ghostball_init(){
+	ghostx[0] = 1.0f; ghosty[0] = -0.4f;
+	ghostx[1] = -2.0f; ghosty[1] = 2.2f;
+	ghostx[2] = -3.0f; ghosty[2] = 2.4f;
+	ghostx[3] = 3.3f; ghosty[3] = 2.3f;
+	ghostx[4] = -0.6f; ghosty[4] = -3.3f;
+	ghostx[5] = 6.6f; ghosty[5] = -0.3f;
+	for (int i = 0; i < 6; i++){
+		gspeed[i] = 0;
+		ghostflag[i] = 1;
+		ghostrotate[i] = 0;
+	}
+}
 
 // calculate the eye position according to center position and angle,length
 void CalEyePostion()
@@ -106,7 +150,7 @@ void RotateDown()
 
 //辅助线
 float directRotate = 0;
-float Rspeed = 5.0;
+float Rspeed = 5;
 void KeyFunc(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -167,15 +211,14 @@ BITMAP GetBmp(LPCTSTR title)
 	return bmp;
 }
 
-
+static BITMAP tb_bmp = GetBmp(L"D:/pictures/table.bmp");
 void texture_display(){
 	{
 		glColor3f(0, 0, 0);
-		static BITMAP bmp = GetBmp(L"D:/pictures/table.bmp");
 		static GLuint texid;
 		glGenTextures(1, &texid);
 		glBindTexture(GL_TEXTURE_2D, texid);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, bmp.bmWidth, bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, bmp.bmBits);
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, tb_bmp.bmWidth, tb_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, tb_bmp.bmBits);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -193,15 +236,15 @@ void texture_display(){
 		glFlush();
 	};
 }
-
+static BITMAP wd_bmp = GetBmp(L"D:/pictures/wood.bmp");
 void wood_texture_display(){
 	{
 		glColor3f(0, 0, 0);
-		static BITMAP bmp = GetBmp(L"D:/pictures/wood.bmp");
+		
 		static GLuint texid;
 		glGenTextures(1, &texid);
 		glBindTexture(GL_TEXTURE_2D, texid);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, bmp.bmWidth, bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, bmp.bmBits);
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, wd_bmp.bmWidth, wd_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, wd_bmp.bmBits);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -336,7 +379,7 @@ void Draw_Table()
 	glPopMatrix();
 
 	//桌子纹理
-	glPolygonMode(GL_FRONT, GL_FILL);
+	/*glPolygonMode(GL_FRONT, GL_FILL);
 	glPolygonMode(GL_BACK, GL_POINT);
 
 	glPushMatrix();
@@ -347,7 +390,7 @@ void Draw_Table()
 	glPushMatrix();
 	wood_texture_display();
 	glPopMatrix();
-
+	*/
 
 	//母球
 	glPushMatrix();
@@ -356,39 +399,26 @@ void Draw_Table()
 	glutSolidSphere(r, 16, 16);
 	glPopMatrix();
 
-	//鬼球s
-	glPushMatrix();
-	glTranslatef(-3.0, 2.0, -0.6);
-	glColor3f(0.0f, 0.3f, 0.3f);
-	glutSolidSphere(r, 16, 16);
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(4.0, -3.0, -0.6);
-	glColor3f(0.0f, 0.3f, 0.3f);
-	glutSolidSphere(r, 16, 16);
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(3.0, 1.0, -0.6);
-	glColor3f(0.0f, 0.3f, 0.3f);
-	glutSolidSphere(r, 16, 16);
-	glPopMatrix();
+	//鬼球
+	for (int i = 0; i < 6; i++){
+		if (ghostflag[i]){
+			glPushMatrix();
+			glTranslatef(ghostx[i], ghosty[i], -0.6);
+			glColor3f(0.0f, 0.2f, 0.3f);
+			glutSolidSphere(r, 16, 16);
+			glPopMatrix();
+		}
+	}
 
 	//移动球
-	if (eflag2){
-		glPushMatrix();
-		glTranslatef(x2, y2, -0.6);
-		glColor3f(1.0f, 0.3f, 1.0f);
-		glutSolidSphere(r, 16, 16);
-		glPopMatrix();
-	}
-	if (eflag3){
-		glPushMatrix();
-		glTranslatef(x3, y3, -0.6);
-		glColor3f(1.0f, 0.3f, 1.0f);
-		glutSolidSphere(r, 16, 16);
-		glPopMatrix();
+	for (int i = 0; i < 6; i++){
+		if (moveflag[i]){
+			glPushMatrix();
+			glTranslatef(movex[i], movey[i], -0.6);
+			glColor3f(1.0f, 0.3f, 1.0f);
+			glutSolidSphere(r, 16, 16);
+			glPopMatrix();
+		}
 	}
 
 	//金球
@@ -401,6 +431,7 @@ void Draw_Table()
 	//辅助线
 	if (!wflag){
 		glPushMatrix();
+		glTranslatef(wx, wy, 0);
 		glColor3f(1.0f, 1.0f, 1.0f);
 		glRotatef(directRotate, 0, 0, 1);
 		glLineWidth(1);
@@ -433,69 +464,161 @@ void shoot_idle()
 	if (wflag == 1){
 		wx += wspeed * cos(directRotate / 180 * PI);
 		wy += wspeed * sin(directRotate / 180 * PI);
-	}
-	if (wx >= xedge || wx <= -1*xedge || wy >= yedge || wy <= -1*yedge){
-		wx = 0;
-		wy = 0;
-		wflag = 0;
-	}
-}
-//仅碰撞检测
-void collision_check_idle(float x, float y, int& flag)
-{
-	float distance = sqrt(pow(wx - x, 2) + pow(wy - y, 2));
-	if (distance <= 2 * r){
-		flag = 0;
-		wx = 0;
-		wy = 0;
-		wflag = 0;
-	}
-}
-
-void normal_moveball_idle(float& x, float& y, int& rotate){
-	if (x >= xedge || y >= yedge || x <= -1 * xedge || y <= -1 * yedge){
-		rotate = rand(360);
-		float xx;
-		float yy;
-		xx = x + 3 * nspeed * cos((float)rotate / 180 * PI);
-		yy = y + 3 * nspeed * sin((float)rotate / 180 * PI);
-		if (xx >= xedge || yy >= yedge || xx <= -1 * xedge || yy <= -1 * yedge);
-		else{
-			x = xx;
-			y = yy;
+		wspeed -= wspeed_delta;
+		if (wspeed <= 0)
+			wspeed = 0;
+		if (wy >= yedge || wy <= -1 * yedge){
+			directRotate = 360 - directRotate;
+			wx += wspeed * cos(directRotate / 180 * PI);
+			wy += wspeed * sin(directRotate / 180 * PI);
+		}
+		else if (wx >= xedge || wx <= -1 * xedge){
+			directRotate = 540 - directRotate;
+			wx += wspeed * cos(directRotate / 180 * PI);
+			wy += wspeed * sin(directRotate / 180 * PI);
 		}
 	}
-	else{
-		x += nspeed * cos((float)rotate / 180 * PI);
-		y += nspeed * sin((float)rotate / 180 * PI);
+	if (wspeed == 0){
+		wflag = 0;
+		wspeed = wspeed_edge;
 	}
 }
+//两球碰撞
+void ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
+					float& x2, float& y2, float& speed2, float& rotate2){
+	float speedx1 = speed1 * cos((float)rotate1 / 180 * PI);
+	float speedy1 = speed1 * sin((float)rotate1 / 180 * PI);
+	float speedx2 = speed2 * cos((float)rotate2 / 180 * PI);
+	float speedy2 = speed2 * sin((float)rotate2 / 180 * PI);
 
+	float base = pow(x2 - x1, 2) + pow(y2 - y1, 2);
+	float nspeedx1 = (speedx1 * pow(y2 - y1, 2) + speedx2 * pow(x2 - x1, 2) + (speedy2 - speedy1) * (x2 - x1) * (y2 - y1)) / base;
+	float nspeedy1 = (speedy2 * pow(y2 - y1, 2) + speedy1 * pow(x2 - x1, 2) + (speedx2 - speedx1) * (x2 - x1) * (y2 - y1)) / base;
+	float nspeedx2 = (speedx1 * pow(x2 - x1, 2) + speedx2 * pow(y2 - y1, 2) + (speedy2 - speedy1) * (x2 - x1) * (y2 - y1)) / base;
+	float nspeedy2 = (speedy1 * pow(y2 - y1, 2) + speedy2 * pow(x2 - x1, 2) + (speedx2 - speedx1) * (x2 - x1) * (y2 - y1)) / base;
+
+	x1 += 3 * nspeedx1;
+	x2 += 3 * nspeedx2;
+	y1 += 3 * nspeedy1;
+	y2 += 3 * nspeedy2;
+ 	speed1 = sqrt(pow(nspeedx1, 2) + pow(nspeedy1, 2));
+	speed2 = sqrt(pow(nspeedx2, 2) + pow(nspeedy2, 2));
+	rotate1 = acosf(nspeedx1 / speed1) / PI * 180;
+	rotate2 = acosf(nspeedx2 / speed2) / PI * 180;
+}
+//碰撞检测
+void collision_check_idle()
+{
+	//母球和其他球之间的碰撞检测
+	if (wflag == 1){
+		for (int i = 0; i < 6; i++){
+			if (moveflag[i] == 1){
+				float distance = sqrt(pow(wx - movex[i], 2) + pow(wy - movey[i], 2));
+				if (distance <= 2 * r){
+					//这段碰撞逻辑是错的
+					int tmp = directRotate;
+					directRotate = moverotate[i];
+					moverotate[i] = tmp;
+					float ftmp = wspeed;
+					wspeed = mspeed[i];
+					mspeed[i] = ftmp;
+					//ball_collision(wx, wy, wspeed, directRotate, movex[i], movey[i], mspeed[i], moverotate[i]);
+				}
+			}
+			if (ghostflag[i] == 1){
+				float distance = sqrt(pow(wx - ghostx[i], 2) + pow(wy - ghosty[i], 2));
+				if (distance <= 2 * r){
+					int tmp = directRotate;
+					directRotate = ghostrotate[i];
+					ghostrotate[i] = tmp;
+					float ftmp = wspeed;
+					wspeed = gspeed[i];
+					gspeed[i] = ftmp;
+					//ball_collision(wx, wy, wspeed, directRotate, ghostx[i], ghosty[i], gspeed[i], ghostrotate[i]);
+				}
+			}
+		}
+	}
+	//移动球之间\与鬼球的碰撞检测
+	for (int i = 0; i < 5; i++){
+		for (int j = i+1; j < 6; j++){
+			float distance = sqrt(pow(movex[i] - movex[j], 2) + pow(movey[i] - movey[j], 2));
+			if (distance <= 2 * r){
+				int tmp = moverotate[i];
+				moverotate[i] = moverotate[j];
+				moverotate[j] = tmp;
+			}
+		}
+	}
+	//鬼球间的碰撞检测
+}
+
+void normal_moveball_idle(float& x, float& y, float& rotate, float& speed){
+	speed -= mspeed_delta;
+	if (speed <= mspeed_edge)
+		speed += mspeed_edge;
+	if (y >= yedge || y <= -1 * yedge){
+		rotate = 360 - rotate;
+		x += speed * cos((float)rotate / 180 * PI);
+		y += speed * sin((float)rotate / 180 * PI);
+	}
+	else if (x >= xedge || x <= -1 * xedge){
+		rotate = 540 - rotate;
+		x += speed * cos((float)rotate / 180 * PI);
+		y += speed * sin((float)rotate / 180 * PI);
+	}
+	else{
+		x += speed * cos((float)rotate / 180 * PI);
+		y += speed * sin((float)rotate / 180 * PI);
+	}
+}
+void normal_ghostball_idle(float& x, float& y, float& rotate, float& speed){
+	if (speed != 0){
+		speed -= gspeed_delta;
+		if (speed <= 0)
+			speed = 0;
+		if (y >= yedge || y <= -1 * yedge){
+			rotate = 360 - rotate;
+			x += speed * cos((float)rotate / 180 * PI);
+			y += speed * sin((float)rotate / 180 * PI);
+		}
+		else if (x >= xedge || x <= -1 * xedge){
+			rotate = 540 - rotate;
+			x += speed * cos((float)rotate / 180 * PI);
+			y += speed * sin((float)rotate / 180 * PI);
+		}
+		else{
+			x += speed * cos((float)rotate / 180 * PI);
+			y += speed * sin((float)rotate / 180 * PI);
+		}
+	}
+}
 int moveflag1 = 0;
-int moveflag = 0;
 int count = 0;
 void idle()
 {
 	shoot_idle();
-	collision_check_idle(x2, y2, eflag2);
-	normal_moveball_idle(x2, y2, rotate2);
-	collision_check_idle(x3, y3, eflag3);
-	normal_moveball_idle(x3, y3, rotate3);
-
-	if (moveflag == 0){
+	//normal_ball_idle(wx, wy, directRotate, wspeed);
+	for (int i = 0; i < 6; i++){		
+		normal_moveball_idle(movex[i], movey[i], moverotate[i], mspeed[i]);
+		normal_ghostball_idle(ghostx[i], ghosty[i], ghostrotate[i], gspeed[i]);
+	}
+	collision_check_idle();
+	/*
+	if (moveflag1 == 0){
 		if (gx < 8.0f) gx += 0.2f;
 		//if (y2 < 4.0f) y2 += 0.01f;
 		count++;
 	}
-	if (moveflag == 1){
+	if (moveflag1 == 1){
 		if (gx > -8.0f) gx-= 0.2f;
 		//if (y2 > -4.0f) y2 -= 0.01f;
 		count++;
 	}
 	if (gx >= 8.0f)
-		moveflag = 1;
+		moveflag1 = 1;
 	if (gx <= -8.0f)
-		moveflag = 0;
+		moveflag1 = 0;
 	if (count > 500){
 		gz = -0.5f;
 	}
@@ -503,35 +626,34 @@ void idle()
 		gz = -3.5f;
 		count = 0;
 	}
-
+	*/
 	glutPostRedisplay();
 }
 GLfloat z = 0.0f;
+int tb_flag = 0;
 void redraw()
 {
 	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);
 	LookAt();
 	glPushMatrix();
-	glColor3f(0, 1.0f, 1.0f);
-	//glTranslatef(4.0f, 0.0f, -3.0f);
-	glutSolidSphere(0.4, 10, 10);
-	glPopMatrix();
-	glPushMatrix();
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glTranslatef(0.0f, 0.0f, 0.0f);
 	glRotatef(80.0f, 1.0f, 0.1f, 0.0f);
 	Draw_Table();
 	glPopMatrix();
-
+	glFlush();
 	glutSwapBuffers();
 }
 int main(int argc, char *argv[])
 {
+	moveball_init();
+	ghostball_init();
+
 	glutInit(&argc, argv);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_LEQUAL);
+	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowSize(840, 480);
 	glutCreateWindow("work");
