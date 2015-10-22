@@ -19,14 +19,16 @@ float xedge = 9.0f, yedge = 3.6f;//桌子
 //母球
 float wx = 0, wy = 0;
 float wspeed = 0.018f;
-float wspeed_delta = 0.00002f;
+float wspeed_delta1 = 0.00001f;
+float wspeed_delta2 = 0.00004f;
 float wspeed_edge = 0.018f;
+float wspeed_edge2 = 0.004f;
 int wflag = 0;
 
 //移动球
-float mspeed_edge = 0.008f;//最小恒定速度
+float mspeed_edge = 0.004f;//最小恒定速度
 float mspeed[6];//当前速度
-float mspeed_delta = 0.00002f;//衰减/增加速度
+float mspeed_delta = 0.00001f;//衰减/增加速度
 float movex[6], movey[6];
 int moveflag[6];//是否存在
 float moverotate[6];
@@ -34,7 +36,7 @@ int movex_edge = 6, movey_edge = 2;
 
 //鬼球
 float gspeed[6];
-float gspeed_delta = 0.00004f;
+float gspeed_delta = 0.00002f;
 float ghostx[6], ghosty[6];
 int ghostflag[6];
 float ghostrotate[6];
@@ -76,7 +78,7 @@ void moveball_init(){
 			movex[i] = rand(movex_edge*10) / 10;
 			movey[i] = -1 * rand(movey_edge*10) / 10;
 		}
-		moveflag[i] = 1;
+		moveflag[i] = 0;
 		moverotate[i] = rand(360);
 	}
 }
@@ -150,14 +152,18 @@ void RotateDown()
 
 //辅助线
 float directRotate = 0;
-float Rspeed = 5;
+float Rspeed = 5.0f;
 void KeyFunc(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
 		case 'a': directRotate += Rspeed; break;
 		case 'd': directRotate -= Rspeed; break;
-		case 's': wflag = 1; break;
+		case 's': 
+			wflag = 1;
+			printf("------------------\n");
+			printf("%f \n", directRotate);
+			break;
 	}
 	glutPostRedisplay();
 }
@@ -464,7 +470,9 @@ void shoot_idle()
 	if (wflag == 1){
 		wx += wspeed * cos(directRotate / 180 * PI);
 		wy += wspeed * sin(directRotate / 180 * PI);
-		wspeed -= wspeed_delta;
+		if (wspeed > wspeed_edge2) 
+			wspeed -= wspeed_delta1;
+		else wspeed -= wspeed_delta2;
 		if (wspeed <= 0)
 			wspeed = 0;
 		if (wy >= yedge || wy <= -1 * yedge){
@@ -486,25 +494,37 @@ void shoot_idle()
 //两球碰撞
 void ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 					float& x2, float& y2, float& speed2, float& rotate2){
-	float speedx1 = speed1 * cos((float)rotate1 / 180 * PI);
-	float speedy1 = speed1 * sin((float)rotate1 / 180 * PI);
-	float speedx2 = speed2 * cos((float)rotate2 / 180 * PI);
-	float speedy2 = speed2 * sin((float)rotate2 / 180 * PI);
-
-	float base = pow(x2 - x1, 2) + pow(y2 - y1, 2);
-	float nspeedx1 = (speedx1 * pow(y2 - y1, 2) + speedx2 * pow(x2 - x1, 2) + (speedy2 - speedy1) * (x2 - x1) * (y2 - y1)) / base;
-	float nspeedy1 = (speedy2 * pow(y2 - y1, 2) + speedy1 * pow(x2 - x1, 2) + (speedx2 - speedx1) * (x2 - x1) * (y2 - y1)) / base;
-	float nspeedx2 = (speedx1 * pow(x2 - x1, 2) + speedx2 * pow(y2 - y1, 2) + (speedy2 - speedy1) * (x2 - x1) * (y2 - y1)) / base;
-	float nspeedy2 = (speedy1 * pow(y2 - y1, 2) + speedy2 * pow(x2 - x1, 2) + (speedx2 - speedx1) * (x2 - x1) * (y2 - y1)) / base;
-
-	x1 += 3 * nspeedx1;
-	x2 += 3 * nspeedx2;
-	y1 += 3 * nspeedy1;
-	y2 += 3 * nspeedy2;
- 	speed1 = sqrt(pow(nspeedx1, 2) + pow(nspeedy1, 2));
-	speed2 = sqrt(pow(nspeedx2, 2) + pow(nspeedy2, 2));
-	rotate1 = acosf(nspeedx1 / speed1) / PI * 180;
-	rotate2 = acosf(nspeedx2 / speed2) / PI * 180;
+	float krotate = atanf((y2 - y1) / (x2 - x1)) / PI * 180;
+	printf("%f\n", krotate);
+	float krotate1 = krotate - rotate1;
+	float krotate2 = krotate - rotate2;
+	printf("%f %f\n", krotate1, krotate2);
+	float kx1 = speed1 * cos(krotate1 / 180 * PI);
+	float kx2 = speed2 * cos(krotate2 / 180 * PI);
+	printf("%f %f\n", kx1, kx2);
+	float ky1 = speed1 * sin(krotate1 / 180 * PI);
+	float ky2 = speed2 * sin(krotate2 / 180 * PI);
+	printf("%f %f\n", ky1, ky2);
+	float tmp = kx1;
+	kx1 = kx2;
+	kx2 = tmp;
+	speed1 = sqrt(pow(kx1, 2) + pow(ky1, 2));
+	speed2 = sqrt(pow(kx2, 2) + pow(ky2, 2));
+	printf("%f, %f\n", speed1, speed2);
+	float ry1 = kx1 * sin((krotate) / 180 * PI) + ky1 * sin((180 - krotate) / 180 * PI);
+	float rx1 = kx1 * cos((krotate) / 180 * PI) + ky1 * cos((180 - krotate) / 180 * PI);
+	float ry2 = kx2 * sin((krotate) / 180 * PI) + ky2 * sin((180 - krotate) / 180 * PI);
+	float rx2 = kx2 * cos((krotate) / 180 * PI) + ky2 * cos((180 - krotate) / 180 * PI);
+	printf("%f, %f\n", sqrt(rx1*rx1+ry1*ry1), sqrt(rx2*rx2+ry2*ry2));
+	printf("%f %f %f %f\n", rx1, ry1, rx2, ry2);
+	x1 += 5 * rx1;
+	y1 += 5 * ry1;
+	x2 += 5 * rx2;
+	y2 += 5 * ry2;
+	rotate1 = acosf(rx1 / speed1) / PI * 180;
+	rotate2 = acosf(rx2 / speed2) / PI * 180;
+	printf("%f, %f\n", rotate1, rotate2);
+	printf("------\n");
 }
 //碰撞检测
 void collision_check_idle()
@@ -528,13 +548,13 @@ void collision_check_idle()
 			if (ghostflag[i] == 1){
 				float distance = sqrt(pow(wx - ghostx[i], 2) + pow(wy - ghosty[i], 2));
 				if (distance <= 2 * r){
-					int tmp = directRotate;
+					/*int tmp = directRotate;
 					directRotate = ghostrotate[i];
 					ghostrotate[i] = tmp;
 					float ftmp = wspeed;
 					wspeed = gspeed[i];
-					gspeed[i] = ftmp;
-					//ball_collision(wx, wy, wspeed, directRotate, ghostx[i], ghosty[i], gspeed[i], ghostrotate[i]);
+					gspeed[i] = ftmp;*/
+					ball_collision(wx, wy, wspeed, directRotate, ghostx[i], ghosty[i], gspeed[i], ghostrotate[i]);
 				}
 			}
 		}
@@ -547,6 +567,10 @@ void collision_check_idle()
 				int tmp = moverotate[i];
 				moverotate[i] = moverotate[j];
 				moverotate[j] = tmp;
+				movex[i] += 4 * mspeed[i] * cos(moverotate[i] / 180 * PI);
+				movey[i] += 4 * mspeed[i] * sin(moverotate[i] / 180 * PI);
+				movex[j] += 4 * mspeed[j] * cos(moverotate[j] / 180 * PI);
+				movey[j] += 4 * mspeed[j] * sin(moverotate[j] / 180 * PI);
 			}
 		}
 	}
@@ -555,7 +579,7 @@ void collision_check_idle()
 
 void normal_moveball_idle(float& x, float& y, float& rotate, float& speed){
 	speed -= mspeed_delta;
-	if (speed <= mspeed_edge)
+	if (speed < mspeed_edge)
 		speed += mspeed_edge;
 	if (y >= yedge || y <= -1 * yedge){
 		rotate = 360 - rotate;
@@ -575,8 +599,10 @@ void normal_moveball_idle(float& x, float& y, float& rotate, float& speed){
 void normal_ghostball_idle(float& x, float& y, float& rotate, float& speed){
 	if (speed != 0){
 		speed -= gspeed_delta;
-		if (speed <= 0)
+		if (speed <= 0){
 			speed = 0;
+			rotate = 0;
+		}	
 		if (y >= yedge || y <= -1 * yedge){
 			rotate = 360 - rotate;
 			x += speed * cos((float)rotate / 180 * PI);
