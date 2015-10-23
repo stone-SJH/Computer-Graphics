@@ -643,7 +643,7 @@ void collision_check_idle()
 void normal_moveball_idle(float& x, float& y, float& rotate, float& speed){
 	speed -= mspeed_delta;
 	if (speed < mspeed_edge)
-		speed += mspeed_edge;
+		speed = mspeed_edge;
 	if (y >= yedge || y <= -1 * yedge){
 		rotate = 360 - rotate;
 		x += speed * cos((float)rotate / 180 * PI);
