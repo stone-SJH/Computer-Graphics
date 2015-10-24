@@ -7,6 +7,7 @@ private:
 	CueBall* cb;
 	MoveBalls* mb;
 	GhostBalls* gb;
+	SnitchBall* sb;
 	Table* tb;
 	Viewer* vw;
 
@@ -22,6 +23,8 @@ private:
 	void collision_check_idle();
 	void normal_moveball_idle(float& x, float& y, float& rotate, float& speed);
 	void normal_ghostball_idle(float& x, float& y, float& rotate, float& speed);
+	//金色飞贼有独特的碰撞检测
+	void normal_snitchball_idle();
 
 public:
 	void KeyFunc(unsigned char key, int x, int y);

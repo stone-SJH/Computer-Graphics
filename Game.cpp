@@ -4,11 +4,16 @@ void Game::init(){
 	cb = new CueBall();
 	mb = new MoveBalls();
 	gb = new GhostBalls();
+	sb = new SnitchBall();
 	tb = new Table();
 	vw = new Viewer();
 	for (int i = 0; i < 14; i++){
-		for (int j = 0; j < 14; j++)
-			invalid[i][j] = 0;
+		for (int j = 0; j < 14; j++){
+			if (i != j)
+				invalid[i][j] = 0;
+			else
+				invalid[i][j] = 1;
+		}
 	}
 }
 
@@ -18,6 +23,7 @@ void Game::draw_components(){
 	cb->draw();
 	mb->draw();
 	gb->draw();
+	sb->draw();
 	glPopMatrix();
 }
 
@@ -59,15 +65,42 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 	float rx2 = kx2 * sin((90 - krotate) / 180 * PI) + ky2 * cos((90 - krotate) / 180 * PI);
 	float ry2 = kx2 * cos((90 - krotate) / 180 * PI) + ky2 * sin((90 - krotate) / 180 * PI);
 
-	rotate1 = acosf(rx1 / speed1) / PI * 180;
-	rotate2 = acosf(rx2 / speed2) / PI * 180;
+	float arccos1 = rx1 / speed1;
+	if (arccos1 > 1)
+		arccos1 = 1;
+	else if (arccos1 < -1)
+		arccos1 = -1;
+	float arccos2 = rx2 / speed2;
+	if (arccos2 > 1)
+		arccos2 = 1;
+	else if (arccos2 < -1)
+		arccos2 = -1;
+
+
+	rotate1 = acosf(arccos1) / PI * 180;
+	rotate2 = acosf(arccos2) / PI * 180;
 	if (y2 < y1){
-		rotate1 = 360 - rotate1;
+		rotate1 = rotate1;
 		rotate2 = 360 - rotate2;
 	}
-	for (int c = 0; c < 5; c++){
-		edged_move(x1, y1, speed1, rotate1);
-		edged_move(x2, y2, speed2, rotate2);
+	else if (x2 < x1){
+		rotate1 = 360 - rotate1;
+		rotate2 = rotate2;
+	}
+	int count = 0;//检查错误情况
+	float distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+	while(distance <= 2 * R){
+		if (count < 20){
+			edged_move(x1, y1, speed1, rotate1);
+			edged_move(x2, y2, speed2, rotate2);
+			collision_check_idle();
+			distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+			count++;
+		}
+		else {
+			count = 0;
+			rotate2 += 90;
+		}
 	}
 }
 
@@ -83,7 +116,6 @@ void Game::shoot_idle(){
 
 void Game::collision_check_idle(){
 	//母球和其他球之间的碰撞检测
-	//目前设计为只有母球与其他球的碰撞为斜碰
 	if (cb->wflag == 1){
 		for (int i = 0; i < MNUM; i++){
 			if (mb->moveflag[i] == 1){
@@ -95,8 +127,8 @@ void Game::collision_check_idle(){
 									mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i]);
 				}
 				else{
-					invalid[0][i + 7] = 0;
-					invalid[i + 7][0] = 0;
+					//invalid[0][i + 7] = 0;
+					//invalid[i + 7][0] = 0;
 				}
 			}
 			if (gb->ghostflag[i] == 1){
@@ -108,14 +140,13 @@ void Game::collision_check_idle(){
 									gb->ghostx[i], gb->ghosty[i], gb->gspeed[i], gb->ghostrotate[i]);
 				}
 				else{
-					invalid[0][i + 1] = 0;
-					invalid[i + 1][0] = 0;
+					//invalid[0][i + 1] = 0;
+					//invalid[i + 1][0] = 0;
 				}
 			}
 		}
 	}
 	//移动球之间\与鬼球的碰撞检测
-	//为保证正常逻辑，目前暂时将除母球之外其他球的碰撞设为自定逻辑（非正常弹性斜碰）
 	for (int i = 0; i < MNUM; i++){
 		if (mb->moveflag[i] == 1){
 			for (int j = i + 1; j < MNUM; j++){
@@ -124,17 +155,20 @@ void Game::collision_check_idle(){
 					if (distance <= 2 * R && invalid[i + 7][j + 7] == 0){
 						invalid[i + 7][j + 7] = 1;
 						invalid[j + 7][i + 7] = 1;
-						int tmp = mb->moverotate[i];
+						//
+						/*int tmp = mb->moverotate[i];
 						mb->moverotate[i] = mb->moverotate[j];
-						mb->moverotate[j] = tmp;
-						for (int c = 0; c < 3; c++){
+						mb->moverotate[j] = tmp;*/
+						ball_collision(mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i], mb->movex[j], mb->movey[j], mb->mspeed[j], mb->moverotate[j]);
+						/*while (distance <= 2 * R){
 							edged_move(mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i]);
 							edged_move(mb->movex[j], mb->movey[j], mb->mspeed[j], mb->moverotate[j]);
-						}
+							distance = sqrt(pow(mb->movex[i] - mb->movex[j], 2) + pow(mb->movey[i] - mb->movey[j], 2));
+						}*/
 					}
 					else{
-						invalid[i + 7][j + 7] = 0;
-						invalid[j + 7][i + 7] = 0;
+						//invalid[i + 7][j + 7] = 0;
+						//invalid[j + 7][i + 7] = 0;
 					}
 				}
 			}
@@ -144,30 +178,52 @@ void Game::collision_check_idle(){
 					if (distance <= 2 * R && invalid[i + 7][j + 1] == 0){
 						invalid[i + 7][j + 1] = 1;
 						invalid[j + 1][i + 7] = 1;
-						//ball_collision(movex[i], movey[i], mspeed[i], moverotate[i], ghostx[j], ghosty[j], gspeed[j], ghostrotate[j]);
-						gb->ghostrotate[j] = mb->moverotate[i];
+						ball_collision(mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i], gb->ghostx[j], gb->ghosty[j], gb->gspeed[j], gb->ghostrotate[j]);
+						/*gb->ghostrotate[j] = mb->moverotate[i];
 						mb->moverotate[i] = mb->moverotate[i] + 180;
-						gb->gspeed[j] = mb->mspeed[i];
-						for (int c = 0; c < 3; c++){
+						gb->gspeed[j] = mb->mspeed[i];*/
+						/*while (distance <= 2 * R){
 							edged_move(mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i]);
 							edged_move(gb->ghostx[j], gb->ghosty[j], gb->gspeed[j], gb->ghostrotate[j]);
-						}
+							distance = sqrt(pow(mb->movex[i] - gb->ghostx[j], 2) + pow(mb->movey[i] - gb->ghosty[j], 2));
+						}*/
 					}
 					else{
-						invalid[i + 7][j + 1] = 0;
-						invalid[j + 1][i + 7] = 0;
+						//invalid[i + 7][j + 1] = 0;
+						//invalid[j + 1][i + 7] = 0;
 					}
 				}
 			}
 		}
 	}
 	//鬼球间的碰撞检测
+	for (int i = 0; i < GNUM - 1; i++){
+		if (gb->ghostflag[i] == 1){
+			for (int j = i + 1; j < GNUM; j++){
+				if (gb->ghostflag[j] == 1){
+					float distance = sqrt(pow(gb->ghostx[i] - gb->ghostx[j], 2) + pow(gb->ghosty[i] - gb->ghosty[j], 2));
+					if (distance <= 2 * R && invalid[i + 1][j + 1] == 0){
+						invalid[i + 1][j + 1] = 1;
+						invalid[j + 1][i + 1] = 1;
+						ball_collision(gb->ghostx[i], gb->ghosty[i], gb->gspeed[i], gb->ghostrotate[i], gb->ghostx[j], gb->ghosty[j], gb->gspeed[j], gb->ghostrotate[j]);
+						/*while (distance <= 2 * R){
+							edged_move(gb->ghostx[i], gb->ghosty[i], gb->gspeed[i], gb->ghostrotate[i]);
+							edged_move(gb->ghostx[j], gb->ghosty[j], gb->gspeed[j], gb->ghostrotate[j]);
+							distance = sqrt(pow(gb->ghostx[i] - gb->ghostx[j], 2) + pow(gb->ghosty[i] - gb->ghosty[j], 2));
+						}*/
+					}
+				}
+			}
+		}
+	}
 }
 
 void Game::normal_moveball_idle(float& x, float& y, float& rotate, float& speed){
-	speed -= DELTA;
+	collision_check_idle();
+	if (speed > mb->mspeed_edge)
+		speed -= DELTA;
 	if (speed < mb->mspeed_edge)
-		speed = mb->mspeed_edge;
+		speed += DELTA;
 	if (y >= tb->yedge || y <= -1 * tb->yedge){
 		rotate = 360 - rotate;
 		x += speed * cos((float)rotate / 180 * PI);
@@ -182,10 +238,10 @@ void Game::normal_moveball_idle(float& x, float& y, float& rotate, float& speed)
 		x += speed * cos((float)rotate / 180 * PI);
 		y += speed * sin((float)rotate / 180 * PI);
 	}
-	collision_check_idle();
 }
 
 void Game::normal_ghostball_idle(float& x, float& y, float& rotate, float& speed){
+	collision_check_idle();	
 	if (speed != 0){
 		speed -= DELTA;
 		if (speed <= 0){
@@ -207,9 +263,36 @@ void Game::normal_ghostball_idle(float& x, float& y, float& rotate, float& speed
 			y += speed * sin((float)rotate / 180 * PI);
 		}
 	}
-	collision_check_idle();
 }
 
+void Game::normal_snitchball_idle(){
+	if (sb->drop_flag == 1){
+		float distance = sqrt(pow(cb->wx - sb->snitchx, 2) + pow(cb->wy - sb->snitchy, 2));
+		if (distance <= 2 * R){
+			sb->snitchflag = 0;
+			return;
+		}
+		else  if (sb->timer == sb->drop_max){
+			sb->get_new();
+			sb->timer = 0;
+		}
+	}
+	else{
+		if (sb->timer == sb->timer_max){
+			sb->get_new();
+			sb->timer = 0;
+		}
+		if (sb->snitchx > XEDGE || sb->snitchx < -1 * XEDGE){
+			sb->snitchrotate = 540 - sb->snitchrotate;
+		}
+		if (sb->snitchy > YEDGE || sb->snitchy < -1 * YEDGE){
+			sb->snitchrotate = 360 - sb->snitchrotate;
+		}
+		sb->snitchx += sb->sspeed * cos((float)sb->snitchrotate / 180 * PI);
+		sb->snitchy += sb->sspeed * sin((float)sb->snitchrotate / 180 * PI);
+	}
+	sb->timer++;
+}
 void Game::KeyFunc(unsigned char key, int x, int y){
 	switch (key)
 	{
@@ -228,7 +311,13 @@ void Game::KeyFunc(unsigned char key, int x, int y){
 		}
 		break;
 	case 's':
-		cb->wflag = 1;
+		if (cb->wflag == 0){
+			while (cb->directRotate >= 360)
+				cb->directRotate -= 360;
+			while (cb->directRotate < 0)
+				cb->directRotate += 360;
+			cb->wflag = 1;
+		}
 		break;
 	}
 	glutPostRedisplay();
@@ -274,10 +363,19 @@ void Game::redraw()
 }
 
 void Game::idle(){
+	for (int i = 0; i < 14; i++){
+		for (int j = 0; j < 14; j++){
+			if (i != j)
+				invalid[i][j] = 0;
+			else
+				invalid[i][j] = 1;
+		}
+	}
 	shoot_idle();
 	for (int i = 0; i < MNUM; i++){
 		normal_moveball_idle(mb->movex[i], mb->movey[i], mb->moverotate[i], mb->mspeed[i]);
 		normal_ghostball_idle(gb->ghostx[i], gb->ghosty[i], gb->ghostrotate[i], gb->gspeed[i]);
+		normal_snitchball_idle();
 	}
 	glutPostRedisplay();
 }

@@ -51,7 +51,7 @@ void MoveBalls::draw(){
 		if (moveflag[i]){
 			glPushMatrix();
 			glTranslatef(movex[i], movey[i], -0.6);
-			glColor3f(1.0f, 0.3f, 1.0f);
+			glColor3f(0.0f, 0.0f, 0.0f);
 			glutSolidSphere(R, 10, 10);
 			glPopMatrix();
 		}
@@ -77,13 +77,44 @@ void GhostBalls::draw(){
 		if (ghostflag[i]){
 			glPushMatrix();
 			glTranslatef(ghostx[i], ghosty[i], -0.6);
-			glColor3f(0.0f, 0.2f, 0.3f);
+			glColor3f(1.0f, 0.0f, 0.0f);
 			glutSolidSphere(R, 10, 10);
 			glPopMatrix();
 		}
 	}
 }
 
+void SnitchBall::get_new(){
+	//printf("new!");
+	snitchrotate = rand(360);
+	if ((snitchrotate % drop_time) == 0){
+		//printf("drop!\n");
+		drop_flag = 1;
+		snitchz = -0.6f;
+	}
+	else{
+		drop_flag = 0;
+		snitchz = -3.5f;
+	}
+}
+
+SnitchBall::SnitchBall(){
+	timer = 0;
+	snitchx = 1;
+	snitchy = 1;
+	snitchflag = 1;
+	get_new();
+}
+
+void SnitchBall::draw(){
+	if (snitchflag){
+		glPushMatrix();
+		glTranslatef(snitchx, snitchy, snitchz);
+		glColor3f(1.0f, 0.0f, 0.0f);
+		glutSolidSphere(R, 10, 10);
+		glPopMatrix();
+	}
+}
 Table::Table(){
 	xedge = 9.0f;
 	yedge = 3.6f;
@@ -257,11 +288,11 @@ void Table::draw(){
 
 	glPushMatrix();
 	glFrontFace(GL_CCW);
-	texture_display();
+	tb_texture_display();
 	glPopMatrix();
 
 	glPushMatrix();
-	wood_texture_display();
+	wd_texture_display();
 	glPopMatrix();
 	*/
 }
