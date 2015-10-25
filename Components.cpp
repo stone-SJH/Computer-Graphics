@@ -91,6 +91,8 @@ void SnitchBall::get_new(){
 		//printf("drop!\n");
 		drop_flag = 1;
 		snitchz = -0.6f;
+		snitchx = snitchx * 9 / XEDGE;
+		snitchy = snitchy * 3.6 / YEDGE;
 	}
 	else{
 		drop_flag = 0;
@@ -110,7 +112,7 @@ void SnitchBall::draw(){
 	if (snitchflag){
 		glPushMatrix();
 		glTranslatef(snitchx, snitchy, snitchz);
-		glColor3f(1.0f, 0.0f, 0.0f);
+		glColor3f(1.0f, 1.0f, 0.0f);
 		glutSolidSphere(R, 10, 10);
 		glPopMatrix();
 	}
@@ -118,6 +120,8 @@ void SnitchBall::draw(){
 Table::Table(){
 	xedge = 9.0f;
 	yedge = 3.6f;
+	tb_bmp = GetBmp(L"D:/pictures/table.bmp");
+	wd_bmp = GetBmp(L"D:/pictures/wood.bmp");
 }
 
 BITMAP Table::GetBmp(LPCTSTR title)
@@ -132,7 +136,6 @@ BITMAP Table::GetBmp(LPCTSTR title)
 void Table::tb_texture_display(){
 	glColor3f(0, 0, 0);
 	static GLuint texid;
-	BITMAP tb_bmp = tb_bmp = GetBmp(L"D:/pictures/table.bmp");
 	glGenTextures(1, &texid);
 	glBindTexture(GL_TEXTURE_2D, texid);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, tb_bmp.bmWidth, tb_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, tb_bmp.bmBits);
@@ -157,7 +160,6 @@ void Table::wd_texture_display(){
 	{
 		glColor3f(0, 0, 0);
 		static GLuint texid;
-		BITMAP wd_bmp = GetBmp(L"D:/pictures/wood.bmp");
 		glGenTextures(1, &texid);
 		glBindTexture(GL_TEXTURE_2D, texid);
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, wd_bmp.bmWidth, wd_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, wd_bmp.bmBits);

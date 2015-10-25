@@ -7,6 +7,7 @@ void Game::init(){
 	sb = new SnitchBall();
 	tb = new Table();
 	vw = new Viewer();
+	tb_flag = 0;
 	for (int i = 0; i < 14; i++){
 		for (int j = 0; j < 14; j++){
 			if (i != j)
@@ -90,10 +91,29 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 	int count = 0;//¼ì²é´íÎóÇé¿ö
 	float distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 	while(distance <= 2 * R){
-		if (count < 20){
+		float delta = (2 * R - distance) / 20;
+		if (cos(rotate1 / 180 * PI) <= 0.1 && cos(rotate1 / 180 * PI) > 0)
+			x1 += delta;
+		else if (cos(rotate1 / 180 * PI) < 0 && cos(rotate1 / 180 * PI) >= -0.1)
+			x1 -= delta;
+		else if (sin(rotate1 / 180 * PI) <= 0.1 && sin(rotate1 / 180 * PI) > 0)
+			y1 += delta;
+		else if (sin(rotate1 / 180 * PI) < 0 && sin(rotate1 / 180 * PI) >= -0.1)
+			y1 -= delta;
+
+		if (cos(rotate2 / 180 * PI) <= 0.1 && cos(rotate2 / 180 * PI) > 0)
+			x2 += delta;
+		else if (cos(rotate2 / 180 * PI) < 0 && cos(rotate2 / 180 * PI) >= -0.1)
+			x2 -= delta;
+		else if (sin(rotate2 / 180 * PI) <= 0.1 && sin(rotate2 / 180 * PI) > 0)
+			y2 += delta;
+		else if (sin(rotate2 / 180 * PI) < 0 && sin(rotate2 / 180 * PI) >= -0.1)
+			y2 -= delta;
+
+		if (count < 5){
+			//collision_check_idle();
 			edged_move(x1, y1, speed1, rotate1);
 			edged_move(x2, y2, speed2, rotate2);
-			collision_check_idle();
 			distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 			count++;
 		}
@@ -220,6 +240,8 @@ void Game::collision_check_idle(){
 
 void Game::normal_moveball_idle(float& x, float& y, float& rotate, float& speed){
 	collision_check_idle();
+	if (speed > mb->mspeed_edge2)
+		speed = mb->mspeed_edge2;
 	if (speed > mb->mspeed_edge)
 		speed -= DELTA;
 	if (speed < mb->mspeed_edge)
@@ -358,7 +380,7 @@ void Game::redraw()
 	glRotatef(80.0f, 1.0f, 0.1f, 0.0f);
 	draw_components();
 	glPopMatrix();
-	glFlush();
+	//glFlush();
 	glutSwapBuffers();
 }
 

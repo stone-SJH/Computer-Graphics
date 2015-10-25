@@ -24,6 +24,7 @@ public:
 class MoveBalls{
 public:
 	float mspeed_edge = 0.04f;//最小恒定速度
+	float mspeed_edge2 = 0.08f;//最大速度
 	float mspeed[MNUM];//当前速度
 	float movex[MNUM], movey[MNUM];//位置
 	int moveflag[MNUM];//是否存在
@@ -50,7 +51,7 @@ public:
 	int timer;
 	int timer_max = 500;
 	int drop_time = 2;// 1/drop_time是落地的概率
-	int drop_max = 250;// 落地持续的时间
+	int drop_max = 150;// 落地持续的时间
 	int drop_flag;
 
 	float sspeed = 0.2f;
@@ -66,6 +67,8 @@ public:
 class Table{
 private:
 	static BITMAP GetBmp(LPCTSTR title);
+	BITMAP tb_bmp;
+	BITMAP wd_bmp;
 	void wd_texture_display();
 	void tb_texture_display();
 public:

@@ -11,6 +11,7 @@ private:
 	Table* tb;
 	Viewer* vw;
 
+	bool tb_flag;
 	int invalid[TOTAL][TOTAL];
 
 	void init();
