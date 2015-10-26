@@ -118,8 +118,6 @@ void SnitchBall::draw(){
 	}
 }
 Table::Table(){
-	xedge = 9.0f;
-	yedge = 3.6f;
 	tb_bmp = GetBmp(L"D:/pictures/table.bmp");
 	wd_bmp = GetBmp(L"D:/pictures/wood.bmp");
 }
@@ -285,7 +283,7 @@ void Table::draw(){
 	glPopMatrix();
 
 	//×À×ÓÎÆÀí
-	/*glPolygonMode(GL_FRONT, GL_FILL);
+	glPolygonMode(GL_FRONT, GL_FILL);
 	glPolygonMode(GL_BACK, GL_POINT);
 
 	glPushMatrix();
@@ -296,5 +294,5 @@ void Table::draw(){
 	glPushMatrix();
 	wd_texture_display();
 	glPopMatrix();
-	*/
+	
 }

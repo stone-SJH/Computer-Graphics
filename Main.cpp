@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	glutKeyboardFunc(KeyFunc);
 	glutMouseFunc(MouseFunc);
 	glutMotionFunc(MouseMotion);
-
+	
 	glutMainLoop();
 
 	return 0;

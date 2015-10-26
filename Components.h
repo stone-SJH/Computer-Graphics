@@ -12,10 +12,11 @@ public:
 	float wy;
 	float wspeed = 0.10f;
 	float wspeed_edge = 0.10f;//恒定速度
-	float wspeed_edge2 = 0.02f;//停止模糊速度
+	float wspeed_edge2 = 0.04f;//停止模糊速度
 	int wflag;
 	float directRotate;
 	float Rspeed = 5.0f;
+	int score = -50;
 
 	CueBall();
 	void draw();
@@ -30,6 +31,7 @@ public:
 	int moveflag[MNUM];//是否存在
 	float moverotate[MNUM];
 	int movex_edge = 6, movey_edge = 2;
+	int score = -20;
 
 	MoveBalls();
 	void draw();
@@ -41,6 +43,7 @@ public:
 	float ghostx[GNUM], ghosty[GNUM];
 	int ghostflag[GNUM];
 	float ghostrotate[GNUM];
+	int score = 300;
 
 	GhostBalls();
 	void draw();
@@ -58,6 +61,7 @@ public:
 	float snitchx, snitchy, snitchz;
 	int snitchflag;
 	int snitchrotate;
+	int score = 5000;
 
 	void get_new();
 	SnitchBall();
@@ -72,8 +76,8 @@ private:
 	void wd_texture_display();
 	void tb_texture_display();
 public:
-	float xedge;
-	float yedge;
+	float xedge = 9.0f;
+	float yedge = 3.6f;
 
 	Table();
 	void draw();

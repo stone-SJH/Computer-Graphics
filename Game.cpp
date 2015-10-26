@@ -7,6 +7,7 @@ void Game::init(){
 	sb = new SnitchBall();
 	tb = new Table();
 	vw = new Viewer();
+	gl = new GameLogic();
 	tb_flag = 0;
 	for (int i = 0; i < 14; i++){
 		for (int j = 0; j < 14; j++){
@@ -31,6 +32,7 @@ void Game::draw_components(){
 void Game::edged_move(float& x, float& y, float& speed, float& rotate){
 	x += speed * cos(rotate / 180 * PI);
 	y += speed * sin(rotate / 180 * PI);
+	pocket_check_idle();
 	speed -= DELTA;
 	if (speed <= 0)
 		speed = 0;
@@ -91,7 +93,7 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 	int count = 0;//¼ì²é´íÎóÇé¿ö
 	float distance = sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
 	while(distance <= 2 * R){
-		float delta = (2 * R - distance) / 20;
+		/*float delta = (2 * R - distance) / 2;
 		if (cos(rotate1 / 180 * PI) <= 0.1 && cos(rotate1 / 180 * PI) > 0)
 			x1 += delta;
 		else if (cos(rotate1 / 180 * PI) < 0 && cos(rotate1 / 180 * PI) >= -0.1)
@@ -109,7 +111,7 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 			y2 += delta;
 		else if (sin(rotate2 / 180 * PI) < 0 && sin(rotate2 / 180 * PI) >= -0.1)
 			y2 -= delta;
-
+		*/
 		if (count < 5){
 			//collision_check_idle();
 			edged_move(x1, y1, speed1, rotate1);
@@ -120,6 +122,36 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 		else {
 			count = 0;
 			rotate2 += 90;
+		}
+	}
+}
+
+void Game::ball_drop(float& x, float& y, float& speed, float& rotate, int& flag, int refresh){
+	int drop_flag = 0;
+	float sum = tb->xedge + tb->yedge;
+	if ((x + y + PAD >= sum) || (x - y + PAD >= sum) || (y - x + PAD >= sum) || (-1 * y - x + PAD >= sum)
+		|| (x <= PAD / 2 && x >= -1 * PAD / 2 && (y > tb->yedge - PAD / 2 || y < -1 * tb->yedge + PAD / 2)))
+		drop_flag = 1;
+	if (drop_flag == 1){
+		if (refresh == 0){
+			flag = 0;
+			gl->total_score += gb->score;
+		}
+		else if (refresh == 1){
+			//moveball
+			x = rand(mb->movex_edge * 10) / 10;
+			y = rand(mb->movey_edge * 10) / 10;
+			rotate = rand(360);
+			gl->total_score += mb->score;
+		}
+		else if (refresh == 2){
+			//cueball
+			x = 0;
+			y = 0;
+			speed = 0;
+			rotate = 0;
+			flag = 0;
+			gl->total_score += cb->score;
 		}
 	}
 }
@@ -147,8 +179,8 @@ void Game::collision_check_idle(){
 									mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i]);
 				}
 				else{
-					//invalid[0][i + 7] = 0;
-					//invalid[i + 7][0] = 0;
+					invalid[0][i + 7] = 0;
+					invalid[i + 7][0] = 0;
 				}
 			}
 			if (gb->ghostflag[i] == 1){
@@ -160,8 +192,8 @@ void Game::collision_check_idle(){
 									gb->ghostx[i], gb->ghosty[i], gb->gspeed[i], gb->ghostrotate[i]);
 				}
 				else{
-					//invalid[0][i + 1] = 0;
-					//invalid[i + 1][0] = 0;
+					invalid[0][i + 1] = 0;
+					invalid[i + 1][0] = 0;
 				}
 			}
 		}
@@ -187,8 +219,8 @@ void Game::collision_check_idle(){
 						}*/
 					}
 					else{
-						//invalid[i + 7][j + 7] = 0;
-						//invalid[j + 7][i + 7] = 0;
+						invalid[i + 7][j + 7] = 0;
+						invalid[j + 7][i + 7] = 0;
 					}
 				}
 			}
@@ -209,8 +241,8 @@ void Game::collision_check_idle(){
 						}*/
 					}
 					else{
-						//invalid[i + 7][j + 1] = 0;
-						//invalid[j + 1][i + 7] = 0;
+						invalid[i + 7][j + 1] = 0;
+						invalid[j + 1][i + 7] = 0;
 					}
 				}
 			}
@@ -232,9 +264,21 @@ void Game::collision_check_idle(){
 							distance = sqrt(pow(gb->ghostx[i] - gb->ghostx[j], 2) + pow(gb->ghosty[i] - gb->ghosty[j], 2));
 						}*/
 					}
+					else{
+						invalid[i + 1][j + 1] = 0;
+						invalid[j + 1][i + 1] = 0;
+					}
 				}
 			}
 		}
+	}
+}
+
+void Game::pocket_check_idle(){
+	ball_drop(cb->wx, cb->wy, cb->wspeed, cb->directRotate, cb->wflag, 2);
+	for (int i = 0; i < GNUM; i++){
+		ball_drop(mb->movex[i], mb->movey[i], mb->mspeed[i], mb->moverotate[i], mb->moveflag[i], 1);
+		ball_drop(gb->ghostx[i], gb->ghosty[i], gb->gspeed[i], gb->ghostrotate[i], gb->ghostflag[i], 0);
 	}
 }
 
@@ -246,6 +290,7 @@ void Game::normal_moveball_idle(float& x, float& y, float& rotate, float& speed)
 		speed -= DELTA;
 	if (speed < mb->mspeed_edge)
 		speed += DELTA;
+	pocket_check_idle();
 	if (y >= tb->yedge || y <= -1 * tb->yedge){
 		rotate = 360 - rotate;
 		x += speed * cos((float)rotate / 180 * PI);
@@ -270,6 +315,7 @@ void Game::normal_ghostball_idle(float& x, float& y, float& rotate, float& speed
 			speed = 0;
 			rotate = 0;
 		}
+		pocket_check_idle();
 		if (y >= tb->yedge || y <= -1 * tb->yedge){
 			rotate = 360 - rotate;
 			x += speed * cos((float)rotate / 180 * PI);
@@ -292,6 +338,7 @@ void Game::normal_snitchball_idle(){
 		float distance = sqrt(pow(cb->wx - sb->snitchx, 2) + pow(cb->wy - sb->snitchy, 2));
 		if (distance <= 2 * R){
 			sb->snitchflag = 0;
+			gl->total_score += sb->score;
 			return;
 		}
 		else  if (sb->timer == sb->drop_max){
@@ -385,14 +432,14 @@ void Game::redraw()
 }
 
 void Game::idle(){
-	for (int i = 0; i < 14; i++){
+	/*for (int i = 0; i < 14; i++){
 		for (int j = 0; j < 14; j++){
 			if (i != j)
 				invalid[i][j] = 0;
 			else
 				invalid[i][j] = 1;
 		}
-	}
+	}*/
 	shoot_idle();
 	for (int i = 0; i < MNUM; i++){
 		normal_moveball_idle(mb->movex[i], mb->movey[i], mb->moverotate[i], mb->mspeed[i]);
