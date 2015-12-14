@@ -11,7 +11,8 @@ private:
 	GhostBalls* gb;
 	SnitchBall* sb;
 	Table* tb;
-	Flag* fl;
+	Flag* fl0;
+	Flag* fl1;
 	Viewer* vw;
 	GameLogic* gl;
 
@@ -40,7 +41,8 @@ public:
 	void reshape(int width, int height);
 	void redraw();
 	void idle();
-
+	void moveFlag();//[TO DO]
+	void setTex();
 
 	Game();
 };

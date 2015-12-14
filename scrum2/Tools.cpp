@@ -8,3 +8,10 @@ BITMAP Tools::GetBmp(LPCTSTR title)
 	GetObject(hbmp, sizeof(BITMAP), &bmp);
 	return bmp;
 }
+
+void Tools::setTbTex(){
+}
+
+Tools::Tools(){
+	setTbTex();
+}

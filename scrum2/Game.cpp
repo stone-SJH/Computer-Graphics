@@ -8,7 +8,9 @@ void Game::init(){
 	tb = new Table();
 	vw = new Viewer();
 	gl = new GameLogic();
-	fl = new Flag();
+	fl0 = new Flag();
+	fl1 = new Flag(1.0f, 4.7f, -3.0f, 1.1f, -2.0f, 3.1f, -3.0f, L"D:/pictures/table.bmp", 1);
+	fl1->setType(Cos);
 	tb_flag = 0;
 	for (int i = 0; i < 14; i++){
 		for (int j = 0; j < 14; j++){
@@ -27,7 +29,8 @@ void Game::draw_components(){
 	mb->draw();
 	gb->draw();
 	sb->draw();
-	fl->drawFlag();
+	fl0->drawFlag();
+	fl1->drawFlag();
 	glPopMatrix();
 }
 
@@ -402,7 +405,7 @@ void Game::MouseFunc(int button, int state, int x, int y)
 
 void Game::MouseMotion(int x, int y){
 	vw->mouse_motion(x, y);
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
 void Game::reshape(int w, int h)
@@ -431,12 +434,13 @@ void Game::redraw()
 	glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
 	draw_components();
 	glPopMatrix();
-	//glFlush();
+	glFlush();
 	glutSwapBuffers();
 }
 
 void Game::idle(){
-	fl->idle();
+	fl0->idle();
+	fl1->idle();
 	shoot_idle();
 	for (int i = 0; i < MNUM; i++){
 		normal_moveball_idle(mb->movex[i], mb->movey[i], mb->moverotate[i], mb->mspeed[i]);
@@ -446,6 +450,11 @@ void Game::idle(){
 	glutPostRedisplay();
 }
 
+void Game::setTex(){
+	fl0->setTex();
+	fl1->setTex();
+	tb->setTex();
+}
 
 Game::Game(){
 	init();

@@ -9,9 +9,9 @@ CueBall::CueBall(){
 
 void CueBall::draw(){
 	//»­Ä¸Çò
+	glColor3f(1.0f, 1.0f, 1.0f);
 	glPushMatrix();
 	glTranslatef(wx, wy, -0.6);
-	glColor3f(1.0f, 1.0f, 1.0f);
 	glutSolidSphere(R, 10, 10);
 	glPopMatrix();
 
@@ -121,46 +121,56 @@ Table::Table(){
 	tools = new Tools();
 	tb_bmp = tools->GetBmp(L"D:/pictures/table.bmp");
 	wd_bmp = tools->GetBmp(L"D:/pictures/wood.bmp");
+	a_x = -1.0;
+	b_x = 1.0;
 }
 
-void Table::tb_texture_display(){
-	glColor3f(0, 0, 0);
-	static GLuint texid;
-	glGenTextures(1, &texid);
-	glBindTexture(GL_TEXTURE_2D, texid);
+void Table::setTex(){
+	glEnable(GL_TEXTURE_2D);
+
+	glGenTextures(1, &tb_texid);
+	glBindTexture(GL_TEXTURE_2D, tb_texid);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, tb_bmp.bmWidth, tb_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, tb_bmp.bmBits);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	
+	glGenTextures(1, &wd_texid);
+	glBindTexture(GL_TEXTURE_2D, wd_texid);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, wd_bmp.bmWidth, wd_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, wd_bmp.bmBits);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+}
+
+void Table::tb_texture_display(){
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, texid);
+	glBindTexture(GL_TEXTURE_2D, tb_texid);
 	glColor4f(1, 1, 1, 1);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0, 0); glVertex3f(-10.2, 4.7, -0.5);
+	glBegin(GL_QUAD_STRIP);
+	glColor3f(0, 0.5, 1);
 	glTexCoord2f(1, 0); glVertex3f(10.2, 4.7, -0.5);
 	glTexCoord2f(1, 1); glVertex3f(10.2, -4.7, -0.5);
+	glTexCoord2f(1 - (10.2 - b_x) / 20.4, 0); glVertex3f(b_x, 4.7, -0.5);
+	glTexCoord2f(1 - (10.2 - b_x) / 20.4, 1); glVertex3f(b_x, -4.7, -0.5);
+	glColor3f(1, 1, 1);
+	glTexCoord2f(1 - (b_x - a_x) / 20.4 - (10.2 - b_x) / 20.4, 0); glVertex3f(a_x, 4.7, -0.5);
+	glTexCoord2f(1 - (b_x - a_x) / 20.4 - (10.2 - b_x) / 20.4, 1); glVertex3f(a_x, -4.7, -0.5);
+	glColor3f(1, 0.5, 0);
+	glTexCoord2f(0, 0); glVertex3f(-10.2, 4.7, -0.5);
 	glTexCoord2f(0, 1); glVertex3f(-10.2, -4.7, -0.5);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
-	glFlush();
 }
 
 void Table::wd_texture_display(){
-	{
-		glColor3f(0, 0, 0);
-		static GLuint texid;
-		glGenTextures(1, &texid);
-		glBindTexture(GL_TEXTURE_2D, texid);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, wd_bmp.bmWidth, wd_bmp.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, wd_bmp.bmBits);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, texid);
-		glColor4f(1, 1, 1, 1);
 
+		glBindTexture(GL_TEXTURE_2D, wd_texid);
+		glColor4f(1, 1, 1, 1);
+		glEnable(GL_TEXTURE_2D);
 		glFrontFace(GL_CCW);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex3f(-10.2, 4.7, 0.5);
@@ -193,10 +203,8 @@ void Table::wd_texture_display(){
 		glTexCoord2f(0, 1); glVertex3f(-10.2, -4.7, -0.5);
 
 		glEnd();
-
 		glDisable(GL_TEXTURE_2D);
-		glFlush();
-	};
+		//glFlush();
 }
 
 void Table::draw(){	
@@ -275,10 +283,10 @@ void Table::draw(){
 	glPopMatrix();
 
 	//×À×ÓÎÆÀí
-	/*
+	
 	glPolygonMode(GL_FRONT, GL_FILL);
 	glPolygonMode(GL_BACK, GL_POINT);
-
+	
 	glPushMatrix();
 	glFrontFace(GL_CCW);
 	tb_texture_display();
@@ -287,5 +295,4 @@ void Table::draw(){
 	glPushMatrix();
 	wd_texture_display();
 	glPopMatrix();
-	*/
 }

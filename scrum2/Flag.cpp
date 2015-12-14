@@ -3,10 +3,10 @@
 GLfloat Flag::getcurve(int pos){
 	GLfloat result;
 	if (tp == Sin)
-		result = range * sin(pos * theta_inc + theta);
+		result = range_now * sin(pos * theta_inc + theta);
 	else if (tp == Cos)
-		result = range * cos(pos * theta_inc + theta);
-
+		result = range_now * cos(pos * theta_inc + theta);
+	//cout << result;
 	return result;
 }
 
@@ -28,18 +28,31 @@ void Flag::setNormal(const GLfloat v1[3], const GLfloat v2[3], const GLfloat v3[
 	glNormal3fv(n);
 }
 
+void Flag::setTex(){
+	glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, flag_texture.bmWidth, flag_texture.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, flag_texture.bmBits);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glEnable(GL_TEXTURE_2D);
+}
+
 void Flag::init(){
-	x_inc = (max_x - min_x) / segs;
-	t_inc = 1.0f / segs;
-	theta_inc = 2 * PI * circles / segs;
 	tools = new Tools();
 	flag_texture = tools->GetBmp(tex_file);
-	segs = ((int)((max_x - min_x) * (512 / 2)));
-	range = 2.5f;
+	segs = ((int)(abs(max_x - min_x) * (512 / 2)));
+	range = 0.5f;
 	circles = 2;
 	theta = 0;
 	speed = 5.0f;
 	tp = Sin;
+	x_inc = abs(max_x - min_x) / segs;
+	t_inc = 1.0f / segs;
+	theta_inc = 2 * PI * circles / segs;
+	range_inc = range / segs;
+	range_now = range;
 }
 
 void Flag::setCircles(int c){
@@ -62,11 +75,17 @@ void Flag::setSpeed(float s){
 	speed = s;
 }
 
+void Flag::changeType(int t){
+	type = t;
+}
+
+
 void Flag::drawFlag(){
 	glPolygonMode(GL_BACK, GL_FILL);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	if (type == 0) glColor3f(1, 0.5, 0);
+	else if (type == 1) glColor3f(0, 0.5, 1);
 	glPushMatrix();
-	glTranslatef(10.2, 0.0, -3.0);
+	glTranslatef(pos_x, pos_y, pos_z);
 	glRotatef(270.0f, 0.0f, 0.0f, 1.0f);
 	GLUquadricObj *cylinder_obj_1;
 	cylinder_obj_1 = gluNewQuadric();
@@ -75,39 +94,38 @@ void Flag::drawFlag(){
 	glPopMatrix();
 	glPopMatrix();
 	int i;
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glColor3f(1.0f, 0.0f, 1.0f);
+	
 	glPushMatrix();
-	glTranslatef(10.2, 0.0, -3.0);
-	/*static GLuint texid;
-	glGenTextures(1, &texid);
 	glBindTexture(GL_TEXTURE_2D, texid);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, flag_texture.bmWidth, flag_texture.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, flag_texture.bmBits);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glColor4f(1, 1, 1, 1);
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, texid);
-	glColor4f(1, 1, 1, 1);*/
 	glBegin(GL_QUAD_STRIP);
+	if (type == 0) range_now = range;
+	else if (type == 1) range_now = 0;
 	for (i = 0; i <= segs; ++i){
-		const GLfloat z = getcurve(i);
+		GLfloat y = getcurve(i) + 4.7;
+		GLfloat x;
+		if (type == 0) x = i*x_inc + min_x;
+		else if (type == 1) x = i*x_inc + max_x;
+		if (type == 0) range_now -= range_inc;
+		else if (type == 1) range_now += range_inc;
 		const GLfloat
-			v1[] = { i*x_inc + min_x, max_y, z },
-			v2[] = { i*x_inc + min_x, min_y, z },
+			v1[] = { i*x_inc + min_x, max_z, y },
+			v2[] = { i*x_inc + min_x, min_z, y },
 			v3[] = {
 			(i + 1)*x_inc + min_x,
-			max_y,
+			max_z,
 			getcurve(i + 1) };
 		//setNormal(v1, v2, v3);
-		//glTexCoord2f(i*t_inc, 1.0f);
-		glVertex3fv(v1);
-		//glTexCoord2f(i*t_inc, 0.0f);
-		glVertex3fv(v2);
+		glTexCoord2f(i*t_inc, 1.0f);
+		glVertex3f(x, y, min_z);
+		glTexCoord2f(i*t_inc, 0.0f);
+		glVertex3f(x, y, max_z);
 	}
 	glEnd();
+	glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
-	//glutSwapBuffers();
 }
 
 void Flag::idle(){
@@ -115,13 +133,26 @@ void Flag::idle(){
 }
 
 Flag::Flag(){
-	pos_x = 0;
-	pos_y = 0;
-	pos_z = 0;
-	max_x = 5.0f;
-	min_x = -5.0f;
-	max_y = 5.0f;
-	min_y = -5.0f;
+	pos_x = -1.0f;
+	pos_y = 4.7f;
+	pos_z = -3.0f;
+	max_x = -1.1f;
+	min_x = -3.1f;
+	max_z = -2.0f;
+	min_z = -3.0f;
+	type = 0;
 	tex_file = L"D:/pictures/table.bmp";
+	init();
+}
+Flag::Flag(float posx, float posy, float posz, float maxx, float maxz, float minx, float minz, LPCTSTR texfile, int tpe){
+	pos_x = posx;
+	pos_y = posy;
+	pos_z = posz;
+	max_x = maxx;
+	min_x = minx;
+	max_z = maxz;
+	min_z = minz;
+	type = tpe;
+	tex_file = texfile;
 	init();
 }
