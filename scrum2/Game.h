@@ -41,7 +41,7 @@ public:
 	void reshape(int width, int height);
 	void redraw();
 	void idle();
-	void moveFlag();//[TO DO]
+	void moveFlag(float dis);//[TO DO]
 	void setTex();
 
 	Game();

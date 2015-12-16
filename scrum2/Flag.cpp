@@ -28,20 +28,33 @@ void Flag::setNormal(const GLfloat v1[3], const GLfloat v2[3], const GLfloat v3[
 	glNormal3fv(n);
 }
 
+bool Flag::checkBound(){
+	if (pos_x > 10.2 || max_x > 10.2 || min_x > 10.2 ||
+		pos_x < -10.2 || max_x < -10.2 || min_x < -10.2)
+		return false;
+	return true;
+}
+
+void Flag::move(float dis){
+		this->pos_x += dis;
+		this->max_x += dis;
+		this->min_x += dis;
+}
+
 void Flag::setTex(){
-	glGenTextures(1, &texid);
-	glBindTexture(GL_TEXTURE_2D, texid);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, flag_texture.bmWidth, flag_texture.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, flag_texture.bmBits);
+	glGenTextures(1, &texid1);
+	glBindTexture(GL_TEXTURE_2D, texid1);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, flag_texture1.bmWidth, flag_texture1.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, flag_texture1.bmBits);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glEnable(GL_TEXTURE_2D);
+	
 }
 
 void Flag::init(){
 	tools = new Tools();
-	flag_texture = tools->GetBmp(tex_file);
+	flag_texture1 = tools->GetBmp(tex_file);
 	segs = ((int)(abs(max_x - min_x) * (512 / 2)));
 	range = 0.5f;
 	circles = 2;
@@ -97,7 +110,7 @@ void Flag::drawFlag(){
 	glColor3f(1.0f, 0.0f, 1.0f);
 	
 	glPushMatrix();
-	glBindTexture(GL_TEXTURE_2D, texid);
+	glBindTexture(GL_TEXTURE_2D, texid1);
 	glColor4f(1, 1, 1, 1);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUAD_STRIP);
@@ -141,7 +154,7 @@ Flag::Flag(){
 	max_z = -2.0f;
 	min_z = -3.0f;
 	type = 0;
-	tex_file = L"D:/pictures/table.bmp";
+	tex_file = L"D:/pictures/flag1.bmp";
 	init();
 }
 Flag::Flag(float posx, float posy, float posz, float maxx, float maxz, float minx, float minz, LPCTSTR texfile, int tpe){

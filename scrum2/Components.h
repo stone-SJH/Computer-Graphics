@@ -82,13 +82,15 @@ private:
 	float a_x;
 	//float a_y;
 	float b_x;
-	float b_y;
+	//float b_y;
 
 public:
 	float xedge = 9.0f;
 	float yedge = 3.6f;
 
 	Table();
+	bool checkBound();
+	void move(float dis);
 	void draw();
 	void setTex();
 };

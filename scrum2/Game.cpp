@@ -9,7 +9,7 @@ void Game::init(){
 	vw = new Viewer();
 	gl = new GameLogic();
 	fl0 = new Flag();
-	fl1 = new Flag(1.0f, 4.7f, -3.0f, 1.1f, -2.0f, 3.1f, -3.0f, L"D:/pictures/table.bmp", 1);
+	fl1 = new Flag(1.0f, 4.7f, -3.0f, 1.1f, -2.0f, 3.1f, -3.0f, L"D:/pictures/flag2.bmp", 1);
 	fl1->setType(Cos);
 	tb_flag = 0;
 	for (int i = 0; i < 14; i++){
@@ -117,7 +117,7 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 		else if (sin(rotate2 / 180 * PI) < 0 && sin(rotate2 / 180 * PI) >= -0.1)
 			y2 -= delta;
 		*/
-		if (count < 2){
+		if (count < 10){
 			//collision_check_idle();
 			edged_move(x1, y1, speed1, rotate1);
 			edged_move(x2, y2, speed2, rotate2);
@@ -127,7 +127,7 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 		else {
 			count = 0;
 			//rotate1 -= 45;
-			rotate2 += 45;
+			rotate2 += 90;
 		}
 	}
 }
@@ -141,6 +141,8 @@ void Game::ball_drop(float& x, float& y, float& speed, float& rotate, int& flag,
 	if (drop_flag == 1){
 		if (refresh == 0){
 			flag = 0;
+			x = 100;
+			y = 100;
 			gl->total_score += gb->score;
 		}
 		else if (refresh == 1){
@@ -394,6 +396,12 @@ void Game::KeyFunc(unsigned char key, int x, int y){
 			cb->wflag = 1;
 		}
 		break;
+	case 'j':
+		this->moveFlag(TAB);
+		break;
+	case 'k':
+		this->moveFlag(-TAB);
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -432,6 +440,7 @@ void Game::redraw()
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glTranslatef(0.0f, 0.0f, 0.0f);
 	glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+	glRotatef(140.0f, 0, 0, 1);
 	draw_components();
 	glPopMatrix();
 	glFlush();
@@ -448,6 +457,19 @@ void Game::idle(){
 		normal_snitchball_idle();
 	}
 	glutPostRedisplay();
+}
+
+void Game::moveFlag(float dis){
+	fl0->move(dis);
+	fl1->move(dis);
+	if (!fl0->checkBound() || !fl1->checkBound()){
+		fl0->move(-dis);
+		fl1->move(-dis);
+		return;
+	}
+	tb->move(dis);
+	if (!tb->checkBound())
+		tb->move(-dis);
 }
 
 void Game::setTex(){

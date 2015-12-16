@@ -165,7 +165,16 @@ void Table::tb_texture_display(){
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 }
-
+bool Table::checkBound(){
+	if (a_x > 10.2 || a_x < -10.2 ||
+		b_x > 10.2 || b_x < -10.2)
+		return false;
+	return true;
+}
+void Table::move(float dis){
+	a_x += dis;
+	b_x += dis;
+}
 void Table::wd_texture_display(){
 
 		glBindTexture(GL_TEXTURE_2D, wd_texid);

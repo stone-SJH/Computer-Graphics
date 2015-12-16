@@ -29,8 +29,10 @@ private:
 	GLfloat t_inc;
 	GLfloat theta_inc;
 	Tools* tools;
-	BITMAP flag_texture;
-	GLuint texid;
+	BITMAP flag_texture1;
+	BITMAP flag_texture2;
+	GLuint texid1;
+	GLuint texid2;
 
 	
 	void setNormal(const GLfloat v1[3], const GLfloat v2[3], const GLfloat v3[3]);
@@ -46,8 +48,9 @@ public:
 	void setType(curvetype type);
 	void setSpeed(float speed);
 
-	void move(float posx, float posy);
+	bool checkBound();
+	void move(float dis);
 	void setTex();
-	void drawFlag();//[TO DO]
+	void drawFlag();
 	void idle();
 };
