@@ -9,9 +9,27 @@ void Game::init(){
 	vw = new Viewer();
 	gl = new GameLogic();
 	fl0 = new Flag();
-	fl1 = new Flag(1.0f, 4.7f, -3.0f, 1.1f, -2.0f, 3.1f, -3.0f, L"D:/pictures/flag2.bmp", 1);
+	fl1 = new Flag(1.0f, 4.7f, -2.0f, 1.1f, 6.0f, 5.1f, 4.0f, L"D:/pictures/flag2.bmp", 1);
 	fl1->setType(Cos);
+	tr = new Terrain();
+	cv = new Carve();
+	/**/
+	ps2[0] = new Particles(tb->xedge, tb->yedge, tr->getHeight(tb->xedge, tb->yedge));
+	ps2[1] = new Particles(-tb->xedge, tb->yedge, tr->getHeight(-tb->xedge, tb->yedge));
+	ps2[2] = new Particles(tb->xedge, -tb->yedge, tr->getHeight(tb->xedge, -tb->yedge));
+	ps2[3] = new Particles(-tb->xedge, -tb->yedge, tr->getHeight(-tb->xedge, -tb->yedge));
+	ps2[4] = new Particles(0, tb->yedge, tr->getHeight(0, tb->yedge));
+	ps2[5] = new Particles(0, -tb->yedge, tr->getHeight(0, -tb->yedge));
 	tb_flag = 0;
+
+	LightController0 = 1;
+	LightController1 = 1;
+	LightController2 = 0;
+	LightController3 = 0;
+	LightController4 = 0;
+	VortexController = 0;
+	BackgroundController = 1;
+
 	for (int i = 0; i < 14; i++){
 		for (int j = 0; j < 14; j++){
 			if (i != j)
@@ -20,17 +38,73 @@ void Game::init(){
 				invalid[i][j] = 1;
 		}
 	}
+
+	glEnable(GL_LIGHT0);
+
+	GLfloat light1_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light1_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light1_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light1_position[] = { 20.0, 0.0, 0.0, 0.0 };
+	glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
+	glLightfv(GL_LIGHT1, GL_POSITION, light1_position);
+	glEnable(GL_LIGHT1);
+
+	GLfloat light2_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light2_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light2_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light2_position[] = { 0.0, 8.0, 0.0, 0.0 };
+	glLightfv(GL_LIGHT2, GL_AMBIENT, light2_ambient);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, light2_diffuse);
+	glLightfv(GL_LIGHT2, GL_SPECULAR, light2_specular);
+	glLightfv(GL_LIGHT2, GL_POSITION, light2_position);
+	//glEnable(GL_LIGHT2);
+
+	GLfloat light3_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light3_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light3_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light3_position[] = { 0.0, -8.0, 0.0, 1.0 };
+	glLightfv(GL_LIGHT3, GL_AMBIENT, light3_ambient);
+	glLightfv(GL_LIGHT3, GL_DIFFUSE, light3_diffuse);
+	glLightfv(GL_LIGHT3, GL_SPECULAR, light3_specular);
+	glLightfv(GL_LIGHT3, GL_POSITION, light3_position);
+	//glEnable(GL_LIGHT3);
+
+	GLfloat light4_ambient[] = { 0.2, 0.2, 0.2, 1.0 };
+	GLfloat light4_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light4_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light4_position[] = { -20.0, 0.0, 0.0, 1.0 };
+	glLightfv(GL_LIGHT4, GL_AMBIENT, light4_ambient);
+	glLightfv(GL_LIGHT4, GL_DIFFUSE, light4_diffuse);
+	glLightfv(GL_LIGHT4, GL_SPECULAR, light4_specular);
+	glLightfv(GL_LIGHT4, GL_POSITION, light4_position);
+	//glEnable(GL_LIGHT4);
 }
 
 void Game::draw_components(){
+	cb->wz = tr->getHeight(cb->wx, cb->wy) + R;
+	tr->setPos(cb->wx, cb->wy);
+	for (int i = 0; i < MNUM; i++)
+		mb->movez[i] = tr->getHeight(mb->movex[i], mb->movey[i]) + R;
+	for (int i = 0; i < GNUM; i++)
+		gb->ghostz[i] = tr->getHeight(gb->ghostx[i], gb->ghosty[i]) + R;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	tb->draw();
+	tr->draw();
+	//tb->draw();
 	cb->draw();
 	mb->draw();
 	gb->draw();
 	sb->draw();
 	fl0->drawFlag();
 	fl1->drawFlag();
+	if (VortexController == 1){
+		for (int i = 0; i < VORTEXNUM; i++)
+			ps2[i]->drawVortex();
+	}
+	if (BackgroundController == 1)
+		cv->draw();
+	
 	int ptssize = pts.size();
 	int pssize = ps.size();
 	if (ptssize != pssize){
@@ -71,7 +145,7 @@ void Game::ball_collision(float& x1, float& y1, float& speed1, float& rotate1,
 	Point* pt = new Point();
 	pt->x = (x1 + x2) / 2;
 	pt->y = (y1 + y2) / 2;
-	pt->z = -0.6f;
+	pt->z = tr->getHeight(pt->x, pt->y);
 	pts.push_back(pt);
 	float krotate;
 	if (x1 == x2){
@@ -195,6 +269,7 @@ void Game::ball_drop(float& x, float& y, float& speed, float& rotate, int& flag,
 
 void Game::shoot_idle(){
 	if (cb->wflag == 1){
+		cb->rot += cb->wspeed * 100;
 		edged_move(cb->wx, cb->wy, cb->wspeed, cb->directRotate);
 	}
 	if (cb->wspeed == 0){
@@ -399,6 +474,7 @@ void Game::normal_snitchball_idle(){
 	}
 	sb->timer++;
 }
+
 void Game::KeyFunc(unsigned char key, int x, int y){
 	switch (key)
 	{
@@ -431,6 +507,75 @@ void Game::KeyFunc(unsigned char key, int x, int y){
 	case 'k':
 		this->moveFlag(-TAB);
 		break;
+	case '0':{
+				 if (LightController0 == 0){
+					 glEnable(GL_LIGHT0);
+					 LightController0 = 1;
+				 }
+				 else{
+					 glDisable(GL_LIGHT0);
+					 LightController0 = 0;
+				 }
+				 break;
+	}
+	case '1':{
+				 if (LightController1 == 0){
+					 glEnable(GL_LIGHT1);
+					 LightController1 = 1;
+				 }
+				 else{
+					 glDisable(GL_LIGHT1);
+					 LightController1 = 0;
+				 }
+				 break;
+	}
+	case '2':{
+				 if (LightController2 == 0){
+					 glEnable(GL_LIGHT2);
+					 LightController2 = 1;
+				 }
+				 else{
+					 glDisable(GL_LIGHT2);
+					 LightController2 = 0;
+				 }
+				 break;
+	}
+	case '3':{
+				 if (LightController3 == 0){
+					 glEnable(GL_LIGHT3);
+					 LightController3 = 1;
+				 }
+				 else{
+					 glDisable(GL_LIGHT3);
+					 LightController3 = 0;
+				 }
+				 break;
+	}
+	case '4':{
+				 if (LightController4 == 0){
+					 glEnable(GL_LIGHT4);
+					 LightController4 = 1;
+				 }
+				 else{
+					 glDisable(GL_LIGHT4);
+					 LightController4 = 0;
+				 }
+				 break;
+	}
+	case 'v':{
+				 if (VortexController == 1)
+					 VortexController = 0;
+				 else
+					 VortexController = 1;
+				 break;
+	}
+	case 'b':{
+				 if (BackgroundController == 1)
+					 BackgroundController = 0;
+				 else
+					 BackgroundController = 1;
+				 break;
+	}
 	}
 	glutPostRedisplay();
 }
@@ -464,14 +609,19 @@ void Game::redraw()
 	//glEnable(GL_DEPTH_TEST);
 	glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW);
+
 	vw->look();
+	//camera.Look();
+	//camera.SetViewByMouse();
+	//camera.Update();
 	glPushMatrix();
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glTranslatef(0.0f, 0.0f, 0.0f);
-	glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-	glRotatef(140.0f, 0, 0, 1);
+	glRotatef(270.0f, 1.0f, 0.0f, 0.0f);
+	//glRotatef(140.0f, 0, 0, 1);
 	draw_components();
 	glPopMatrix();
+
 	glFlush();
 	glutSwapBuffers();
 }
@@ -502,9 +652,12 @@ void Game::moveFlag(float dis){
 }
 
 void Game::setTex(){
+	cb->setTex();
 	fl0->setTex();
 	fl1->setTex();
 	tb->setTex();
+	tr->setTex();
+	cv->setTex();
 }
 
 Game::Game(){

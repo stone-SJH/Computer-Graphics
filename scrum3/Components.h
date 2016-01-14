@@ -6,12 +6,14 @@
 #include "macro.h"
 #include "Tools.h"
 #include "Particle.h"
+#include "Terrain.h"
 
 using namespace std;
 class CueBall{
 public:
 	float wx;
 	float wy;
+	float wz;
 	float wspeed = 0.20f;
 	float wspeed_edge = 0.20f;//恒定速度
 	float wspeed_edge2 = 0.08f;//停止模糊速度
@@ -19,9 +21,15 @@ public:
 	float directRotate;
 	float Rspeed = 5.0f;
 	int score = -50;
+	float rot;
+	Tools* tools;
+	//tga cb_texture;
+	BITMAP cb_texture;
+	GLuint texid;
 
 	CueBall();
 	void draw();
+	void setTex();
 };
 
 class MoveBalls{
@@ -32,6 +40,7 @@ public:
 	float mspeed_edge2 = 0.18f;//最大速度
 	float mspeed[MNUM];//当前速度
 	float movex[MNUM], movey[MNUM];//位置
+	float movez[MNUM];
 	int moveflag[MNUM];//是否存在
 	float moverotate[MNUM];
 	int movex_edge = 6, movey_edge = 2;
@@ -44,7 +53,7 @@ public:
 class GhostBalls{
 public:
 	float gspeed[GNUM];
-	float ghostx[GNUM], ghosty[GNUM];
+	float ghostx[GNUM], ghosty[GNUM], ghostz[GNUM];
 	int ghostflag[GNUM];
 	float ghostrotate[GNUM];
 	int score = 300;
@@ -54,6 +63,8 @@ public:
 };
 
 class SnitchBall{
+private:
+	Particles* particle;
 public:
 	int timer;
 	int timer_max = 500;
@@ -94,6 +105,21 @@ public:
 	Table();
 	bool checkBound();
 	void move(float dis);
+	void draw();
+	void setTex();
+};
+
+class Carve{
+private:
+	float x;
+	float y;
+	float zmin;
+	float zmax;
+	BITMAP cv_texture;
+	Tools* tools;
+	GLuint texid;
+public:
+	Carve();
 	void draw();
 	void setTex();
 };

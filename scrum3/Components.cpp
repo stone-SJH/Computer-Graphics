@@ -3,31 +3,91 @@
 CueBall::CueBall(){
 	wx = 0;
 	wy = 0;
+	wz = -0.6;
 	wflag = 0;
+	rot = 0;
 	directRotate = 0;
+	tools = new Tools();
+	cb_texture = tools->GetBmp(L"D:\\pictures\\perlin.bmp"); 
 }
 
 void CueBall::draw(){
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	GLfloat matSpecular[] = { 0.3, 0.0, 0.0, 1.0 };
+	GLfloat matShininess[] = { 20.0 };
+	GLfloat matEmission[] = { 1.0, 1.0, 1.0, 1.0 };
 	//»­Ä¸Çò
-	glColor3f(1.0f, 1.0f, 1.0f);
 	glPushMatrix();
-	glTranslatef(wx, wy, -0.6);
-	glutSolidSphere(R, 10, 10);
+	glPushMatrix();
+	GLfloat light_position[] = { wx, wy, wz + 1, 1.0 };
+	GLfloat ambientLight[] = { 1, 1, 1, 1.0f };
+	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specref[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat spotDir[] = { -1.0f, 0.0f, -1.0f };
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, ambientLight);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 20.0f);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0);
+	glEnable(GL_LIGHTING);
+	//glEnable(GL_COLOR_MATERIAL);
 	glPopMatrix();
+	glTranslatef(wx, wy, wz);
+	glRotatef(rot, cos(directRotate / 180 * PI), cos(directRotate / 180 * PI), sin(directRotate / 180 * PI));
+	//glutSolidSphere(R, 20, 30);
+	GLUquadricObj * sphere = gluNewQuadric();
+	gluQuadricOrientation(sphere, GLU_OUTSIDE);
+	gluQuadricNormals(sphere, GLU_SMOOTH);
+	gluQuadricTexture(sphere, GL_TRUE);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, matShininess);
+	glMaterialfv(GL_FRONT, GL_EMISSION, matEmission);
+	gluSphere(sphere, R, 20, 30);
+	gluDeleteQuadric(sphere);
+	glPopMatrix();
+	glDisable(GL_TEXTURE_2D);
 
 	//»­¸¨ÖúÏß
 	if (!wflag){
 		glPushMatrix();
-		glTranslatef(wx, wy, 0);
-		glColor3f(1.0f, 1.0f, 1.0f);
+		glTranslatef(wx, wy, wz);
+		glColor3f(1.0f, 0.0f, 0.0f);
 		glRotatef(directRotate, 0, 0, 1);
-		glLineWidth(1);
+		glLineWidth(3);
 		glBegin(GL_LINES);
-		glVertex3f(0, 0, -0.6);
-		glVertex3f(2, 0, -0.6);
+		glVertex3f(0, 0, 1);
+		glVertex3f(2, 0, 1);
 		glEnd();
+		glBegin(GL_LINES);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, 1);
+		glEnd();
+		glTranslatef(2, 0, 1);
+		glRotatef(90.0f, 0, 1, 0);
+		glutSolidCone(0.1,0.3,10,10);
 		glPopMatrix();
 	}
+}
+
+void CueBall::setTex(){
+	/*glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, cb_texture.type, cb_texture.imageWidth,
+		cb_texture.imageHeight, cb_texture.type, GL_UNSIGNED_BYTE,
+		cb_texture.image);*/
+	glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, cb_texture.bmWidth, cb_texture.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, cb_texture.bmBits);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
 MoveBalls::MoveBalls(){
@@ -43,19 +103,24 @@ MoveBalls::MoveBalls(){
 		}
 		moveflag[i] = 1;
 		moverotate[i] = rand(360);
-		particles[i] = new Particles(movex[i], movey[i], -0.6, 0, 0, 1.0f, moverotate[i]);
+		particles[i] = new Particles(movex[i], movey[i], movez[i], 1, 0, 0, moverotate[i]);
 	}
 }
 
 void MoveBalls::draw(){
+	GLfloat matSpecular[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat matShininess[] = { 20.0 };
+	GLfloat matEmission[] = { 0.0, 0.0, 0.0, 0.0 };
 	for (int i = 0; i < MNUM; i++){
 		if (moveflag[i]){
 			glPushMatrix();
-			glTranslatef(movex[i], movey[i], -0.6);
-			glColor3f(0.0f, 0.0f, 0.0f);
-			glutSolidSphere(R, 10, 10);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+			glMaterialfv(GL_FRONT, GL_SHININESS, matShininess);
+			glMaterialfv(GL_FRONT, GL_EMISSION, matEmission);
+			glTranslatef(movex[i], movey[i], movez[i]);
+			glutSolidSphere(R, 20, 30);
 			glPopMatrix();
-			particles[i]->setPos(movex[i], movey[i], -0.6);
+			particles[i]->setPos(movex[i], movey[i], movez[i]);
 			particles[i]->setRotate(moverotate[i]);
 			particles[i]->draw();
 			
@@ -64,12 +129,12 @@ void MoveBalls::draw(){
 }
 
 GhostBalls::GhostBalls(){
-	ghostx[0] = 1.0f; ghosty[0] = -0.4f;
-	ghostx[1] = -2.0f; ghosty[1] = 2.2f;
-	ghostx[2] = -3.0f; ghosty[2] = 2.4f;
-	ghostx[3] = 3.3f; ghosty[3] = 2.3f;
-	ghostx[4] = -0.6f; ghosty[4] = -3.3f;
-	ghostx[5] = 6.6f; ghosty[5] = -0.3f;
+	ghostx[0] = 5.0f; ghosty[0] = -0.4f;
+	ghostx[1] = -3.0f; ghosty[1] = 2.2f;
+	ghostx[2] = -4.0f; ghosty[2] = 2.4f;
+	ghostx[3] = 1.3f; ghosty[3] = 2.3f;
+	ghostx[4] = -2.6f; ghosty[4] = -3.3f;
+	ghostx[5] = 2.6f; ghosty[5] = -0.3f;
 	for (int i = 0; i < GNUM; i++){
 		gspeed[i] = 0;
 		ghostflag[i] = 1;
@@ -78,12 +143,17 @@ GhostBalls::GhostBalls(){
 }
 
 void GhostBalls::draw(){
+	GLfloat matSpecular[] = { 0.3, 0.0, 0.0, 1.0 };
+	GLfloat matShininess[] = { 20.0 };
+	GLfloat matEmission[] = { 1, 0.0, 0, 1.0 };
 	for (int i = 0; i < GNUM; i++){
 		if (ghostflag[i]){
 			glPushMatrix();
-			glTranslatef(ghostx[i], ghosty[i], -0.6);
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glutSolidSphere(R, 10, 10);
+			glTranslatef(ghostx[i], ghosty[i], ghostz[i]);
+			glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+			glMaterialfv(GL_FRONT, GL_SHININESS, matShininess);
+			glMaterialfv(GL_FRONT, GL_EMISSION, matEmission);
+			glutSolidSphere(R, 20, 30);
 			glPopMatrix();
 		}
 	}
@@ -111,16 +181,89 @@ SnitchBall::SnitchBall(){
 	snitchy = 1;
 	snitchflag = 1;
 	get_new();
+	particle = new Particles(snitchx, snitchy, snitchz, 1, 1, 0, snitchrotate);
 }
 
 void SnitchBall::draw(){
+	GLfloat matSpecular[] = { 0.3, 0.0, 0.0, 1.0 };
+	GLfloat matShininess[] = { 20.0 };
+	GLfloat matEmission[] = { 1.0, 1.0, 0.0, 1.0 };
 	if (snitchflag){
 		glPushMatrix();
 		glTranslatef(snitchx, snitchy, snitchz);
-		glColor3f(1.0f, 1.0f, 0.0f);
-		glutSolidSphere(R, 10, 10);
+		glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+		glMaterialfv(GL_FRONT, GL_SHININESS, matShininess);
+		glMaterialfv(GL_FRONT, GL_EMISSION, matEmission);
+		glutSolidSphere(R, 20, 30);
 		glPopMatrix();
+		particle->setPos(snitchx, snitchy, snitchz);
+		particle->setRotate(snitchrotate);
+		particle->draw();
 	}
+}
+
+Carve::Carve(){
+	tools = new Tools();
+	cv_texture = tools->GetBmp(L"D:\\pictures\\background.bmp");
+	x = 15.0f;
+	y = 11.0f;
+	zmin = -1;
+	zmax = 10.0f;
+}
+
+void Carve::draw(){
+	glDisable(GL_LIGHTING);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glEnable(GL_TEXTURE_2D);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0); glVertex3f(x, y, zmin);
+	glTexCoord2f(1, 0); glVertex3f(x, -y, zmin);
+	glTexCoord2f(1, 1); glVertex3f(x, -y, zmax);
+	glTexCoord2f(0, 1); glVertex3f(x, y, zmax);
+	glEnd();
+	glPopMatrix();
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0); glVertex3f(-x, y, zmin);
+	glTexCoord2f(1, 0); glVertex3f(-x, -y, zmin);
+	glTexCoord2f(1, 1); glVertex3f(-x, -y, zmax);
+	glTexCoord2f(0, 1); glVertex3f(-x, y, zmax);
+	glEnd();
+	glPopMatrix();
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0); glVertex3f(x, y, zmin);
+	glTexCoord2f(1, 0); glVertex3f(-x, y, zmin);
+	glTexCoord2f(1, 1); glVertex3f(-x, y, zmax);
+	glTexCoord2f(0, 1); glVertex3f(x, y, zmax);
+	glEnd();
+	glPopMatrix();
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0); glVertex3f(x, -y, zmin);
+	glTexCoord2f(1, 0); glVertex3f(-x, -y, zmin);
+	glTexCoord2f(1, 1); glVertex3f(-x, -y, zmax);
+	glTexCoord2f(0, 1); glVertex3f(x, -y, zmax);
+	glEnd();
+	glPopMatrix();
+
+	glEnable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+}
+
+void Carve::setTex(){
+	glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, cv_texture.bmWidth, cv_texture.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, cv_texture.bmBits);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 Table::Table(){
 	tools = new Tools();
@@ -129,7 +272,6 @@ Table::Table(){
 	a_x = -1.0;
 	b_x = 1.0;
 }
-
 void Table::setTex(){
 	glEnable(GL_TEXTURE_2D);
 
@@ -150,7 +292,6 @@ void Table::setTex(){
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 }
-
 void Table::tb_texture_display(){
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, tb_texid);
@@ -220,7 +361,6 @@ void Table::wd_texture_display(){
 		glDisable(GL_TEXTURE_2D);
 		//glFlush();
 }
-
 void Table::draw(){	
 	glColor3f(0.7f, 0.8f, 0.8f);
 	//×ÀÍÈ

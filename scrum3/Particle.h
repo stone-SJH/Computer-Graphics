@@ -26,8 +26,8 @@ typedef struct
 class Particles{
 	Pars p[MAXP];
 	Tools* tools;
-	BITMAP pt_bmp;
-	GLuint pt_texid;
+	BITMAP pt_texture;
+	GLuint texid1;
 	float x;
 	float y;
 	float z;
@@ -50,7 +50,7 @@ public:
 	void setActive();
 	void draw();
 	void drawCollision();
-
+	void drawVortex();
 
 };
 

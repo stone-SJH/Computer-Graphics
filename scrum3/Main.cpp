@@ -1,7 +1,7 @@
 #include "Game.h"
 //#include "Tools.h"
 
-Game* game = new Game();
+Game* game;
 //Tools* tools = new Tools();
 
 void KeyFunc(unsigned char key, int x, int y){
@@ -38,8 +38,11 @@ int main(int argc, char *argv[])
 	glutInit(&argc, argv);
 	
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(840, 480);
+	glutInitWindowSize(1440, 1024);
 	glutCreateWindow("work");
+	glEnable(GL_DEPTH_TEST);
+
+	game = new Game();
 	glutDisplayFunc(redraw);
 	glutReshapeFunc(reshape);
 	glutTimerFunc(40, timer, 1);

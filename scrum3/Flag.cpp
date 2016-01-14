@@ -94,43 +94,57 @@ void Flag::changeType(int t){
 
 
 void Flag::drawFlag(){
+	GLfloat matSpecular[] = { 0.3, 0.0, 0.0, 1.0 };
+	GLfloat matShininess[] = { 20.0 };
+	GLfloat matEmission1[] = { 1.0, 0.5, 0.0, 1.0 };
+	GLfloat matEmission2[] = { 0, 0.1, 0.1, 1.0 };
+	GLfloat matEmission[] = { 0.3, 0.2, 0.3, 1 };
 	glPolygonMode(GL_BACK, GL_FILL);
-	if (type == 0) glColor3f(1, 0.5, 0);
-	else if (type == 1) glColor3f(0, 0.5, 1);
 	glPushMatrix();
 	glTranslatef(pos_x, pos_y, pos_z);
 	glRotatef(270.0f, 0.0f, 0.0f, 1.0f);
 	GLUquadricObj *cylinder_obj_1;
 	cylinder_obj_1 = gluNewQuadric();
 	glPushMatrix();
-	gluCylinder(cylinder_obj_1, 0.1, 0.1, 3.0, 20, 20);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, matShininess);
+	if (type == 0)
+		glMaterialfv(GL_FRONT, GL_EMISSION, matEmission1);
+	else if (type == 1)
+		glMaterialfv(GL_FRONT, GL_EMISSION, matEmission2);
+	gluCylinder(cylinder_obj_1, 0.1, 0.1, 8.0, 20, 20);
 	glPopMatrix();
 	glPopMatrix();
-	int i;
-	glColor3f(1.0f, 0.0f, 1.0f);
-	
+
+	int i;	
 	glPushMatrix();
 	glBindTexture(GL_TEXTURE_2D, texid1);
-	glColor4f(1, 1, 1, 1);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUAD_STRIP);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, matShininess);
+	glMaterialfv(GL_FRONT, GL_EMISSION, matEmission);
 	if (type == 0) range_now = range;
 	else if (type == 1) range_now = 0;
 	for (i = 0; i <= segs; ++i){
 		GLfloat y = getcurve(i) + 4.7;
 		GLfloat x;
-		if (type == 0) x = i*x_inc + min_x;
-		else if (type == 1) x = i*x_inc + max_x;
+		GLfloat xx;
+		if (type == 0){
+			x = i*x_inc + min_x;
+			xx = (i + 1) * x_inc + min_x;
+		}
+		else if (type == 1){
+			x = i*x_inc + max_x;
+			xx = (i + 1) * x_inc + max_x;
+		}
 		if (type == 0) range_now -= range_inc;
 		else if (type == 1) range_now += range_inc;
 		const GLfloat
-			v1[] = { i*x_inc + min_x, max_z, y },
-			v2[] = { i*x_inc + min_x, min_z, y },
-			v3[] = {
-			(i + 1)*x_inc + min_x,
-			max_z,
-			getcurve(i + 1) };
-		//setNormal(v1, v2, v3);
+			v1[] = { x, y, max_z },
+			v2[] = { x, y, min_z },
+			v3[] = { xx, getcurve(i+1) + 4.7, min_z };
+		setNormal(v1, v2, v3);
 		glTexCoord2f(i*t_inc, 1.0f);
 		glVertex3f(x, y, min_z);
 		glTexCoord2f(i*t_inc, 0.0f);
@@ -148,15 +162,17 @@ void Flag::idle(){
 Flag::Flag(){
 	pos_x = -1.0f;
 	pos_y = 4.7f;
-	pos_z = -3.0f;
+	pos_z = -2.0f;
 	max_x = -1.1f;
-	min_x = -3.1f;
-	max_z = -2.0f;
-	min_z = -3.0f;
+	min_x = -5.1f;
+	max_z = 6.0f;
+	min_z = 4.0f;
 	type = 0;
-	tex_file = L"D:/pictures/flag1.bmp";
+	tex_file = L"D:\\pictures\\flag1.bmp";
+	//tex_file = L"D:\\pictures\\color1.bmp";
 	init();
 }
+
 Flag::Flag(float posx, float posy, float posz, float maxx, float maxz, float minx, float minz, LPCTSTR texfile, int tpe){
 	pos_x = posx;
 	pos_y = posy;

@@ -5,7 +5,9 @@
 #include <windows.h> 
 #include <vector>
 
+#define fps 72
 #define rand(x) (rand() % x)
+#define kSpeed    50.0f        
 #define DELTA 0.0012f
 #define MNUM 6
 #define GNUM 6
@@ -19,6 +21,8 @@
 #define TAB 0.5
 #define MAXP 400
 #define PRRANGE 80 //粒子发散角度
+#define SECTION 200
+#define VORTEXNUM 6
 static GLfloat colors[12][3] =                // 彩虹颜色
 {
 	{ 1.0f, 0.5f, 0.5f }, { 1.0f, 0.75f, 0.5f }, { 1.0f, 1.0f, 0.5f }, { 0.75f, 1.0f, 0.5f },

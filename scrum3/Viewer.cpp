@@ -23,12 +23,12 @@ void Viewer::init(){
 }
 
 void Viewer::cal_eye_pos(){
-	if (yrotate > PI / 2.2) yrotate = PI / 2.2;
-	if (yrotate < 0)  yrotate = 0.01;
+	if (yrotate > PI / 3) yrotate = PI / 3;
+	if (yrotate < 0.03)  yrotate = 0.03;
 	if (xrotate > 2 * PI)   xrotate = 0.01;
 	if (xrotate < 0)   xrotate = 2 * PI;
 	if (celength > 15)  celength = 15;
-	if (celength < 5)   celength = 5;
+	if (celength < 3)   celength = 3;
 	eye[0] = 1 *(center[0] + celength * sin(yrotate) * cos(xrotate));
 	eye[2] = 1 * (center[2] + celength * sin(yrotate) * sin(xrotate));
 	eye[1] = 1 * (center[1] + celength * cos(yrotate));
@@ -48,7 +48,7 @@ void Viewer::move_forward()
 	cal_eye_pos();
 }
 
-// visual angle rotates
+
 void Viewer::rotate_left()
 {
 	xrotate -= rSpeed;

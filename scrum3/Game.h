@@ -1,8 +1,11 @@
+#ifndef _GAME_
+#define _GAME_
 #include "Components.h"
 #include "macro.h"
 #include "Viewer.h"
 #include "Mode.h"
 #include "Flag.h"
+#include "Terrain.h"
 
 struct Point{
 	float x;
@@ -15,6 +18,7 @@ private:
 	//int parindex;
 	vector<Point*> pts;
 	vector<Particles*> ps;
+	Particles* ps2[VORTEXNUM];
 	CueBall* cb;
 	MoveBalls* mb;
 	GhostBalls* gb;
@@ -24,6 +28,16 @@ private:
 	Flag* fl1;
 	Viewer* vw;
 	GameLogic* gl;
+	Terrain* tr;
+	Carve* cv;
+
+	bool LightController1;
+	bool LightController2;
+	bool LightController3;
+	bool LightController4;
+	bool LightController0;
+	bool VortexController;
+	bool BackgroundController;
 
 	bool tb_flag;
 	int invalid[TOTAL][TOTAL];
@@ -39,7 +53,6 @@ private:
 	void collision_check_idle();
 	void normal_moveball_idle(float& x, float& y, float& rotate, float& speed);
 	void normal_ghostball_idle(float& x, float& y, float& rotate, float& speed);
-	//金色飞贼有独特的碰撞检测
 	void normal_snitchball_idle();
 	void pocket_check_idle();
 
@@ -50,8 +63,9 @@ public:
 	void reshape(int width, int height);
 	void redraw();
 	void idle();
-	void moveFlag(float dis);//[TO DO]
+	void moveFlag(float dis);
 	void setTex();
 
 	Game();
 };
+#endif
