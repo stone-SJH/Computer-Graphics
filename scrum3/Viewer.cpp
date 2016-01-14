@@ -27,7 +27,7 @@ void Viewer::cal_eye_pos(){
 	if (yrotate < 0.03)  yrotate = 0.03;
 	if (xrotate > 2 * PI)   xrotate = 0.01;
 	if (xrotate < 0)   xrotate = 2 * PI;
-	if (celength > 15)  celength = 15;
+	if (celength > 10)  celength = 10;
 	if (celength < 3)   celength = 3;
 	eye[0] = 1 *(center[0] + celength * sin(yrotate) * cos(xrotate));
 	eye[2] = 1 * (center[2] + celength * sin(yrotate) * sin(xrotate));

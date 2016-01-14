@@ -41,9 +41,9 @@ BITMAP Tools::CreateTex(LPCTSTR title)
 						int r = GetRValue(oldcolor);
 						int g = GetGValue(oldcolor);
 						int b = GetBValue(oldcolor);
-						int rr = (int)p->PerlinNoise_2D((float)r, (float)g);
-						int gg = (int)p->PerlinNoise_2D((float)g, (float)b);
-						int bb = (int)p->PerlinNoise_2D((float)b, (float)r);
+						int rr = r + (int)p->PerlinNoise_1D((float)r);
+						int gg = g + (int)p->PerlinNoise_1D((float)g);
+						int bb = b + (int)p->PerlinNoise_1D((float)b);
 						COLORREF newcolor = RGB(rr, gg, bb);
 						ptPixels[i] = newcolor;
 

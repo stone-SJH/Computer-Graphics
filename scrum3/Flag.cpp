@@ -168,7 +168,7 @@ Flag::Flag(){
 	max_z = 6.0f;
 	min_z = 4.0f;
 	type = 0;
-	tex_file = L"D:\\pictures\\flag1.bmp";
+	tex_file = L"flag1.bmp";
 	//tex_file = L"D:\\pictures\\color1.bmp";
 	init();
 }

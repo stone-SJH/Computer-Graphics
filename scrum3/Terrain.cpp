@@ -6,7 +6,7 @@ void Terrain::init(){
 	ypos = 0;
 	//zpos = 0;
 	scope = 0;
-	tex_file = L"D:\\pictures\\grass.bmp";
+	tex_file = L"grass.bmp";
 	for (x = 0; x <= 249; x++)
 	for (z = 0; z <= 249; z++)
 	{

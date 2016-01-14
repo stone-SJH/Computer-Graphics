@@ -9,7 +9,7 @@ void Game::init(){
 	vw = new Viewer();
 	gl = new GameLogic();
 	fl0 = new Flag();
-	fl1 = new Flag(1.0f, 4.7f, -2.0f, 1.1f, 6.0f, 5.1f, 4.0f, L"D:/pictures/flag2.bmp", 1);
+	fl1 = new Flag(1.0f, 4.7f, -2.0f, 1.1f, 6.0f, 5.1f, 4.0f, L"flag2.bmp", 1);
 	fl1->setType(Cos);
 	tr = new Terrain();
 	cv = new Carve();
@@ -29,6 +29,7 @@ void Game::init(){
 	LightController4 = 0;
 	VortexController = 0;
 	BackgroundController = 1;
+	SnitchController = 1;
 
 	for (int i = 0; i < 14; i++){
 		for (int j = 0; j < 14; j++){
@@ -95,7 +96,7 @@ void Game::draw_components(){
 	cb->draw();
 	mb->draw();
 	gb->draw();
-	sb->draw();
+	//sb->draw();
 	fl0->drawFlag();
 	fl1->drawFlag();
 	if (VortexController == 1){
@@ -104,7 +105,8 @@ void Game::draw_components(){
 	}
 	if (BackgroundController == 1)
 		cv->draw();
-	
+	if (SnitchController == 1)
+		sb->draw();
 	int ptssize = pts.size();
 	int pssize = ps.size();
 	if (ptssize != pssize){
@@ -574,6 +576,13 @@ void Game::KeyFunc(unsigned char key, int x, int y){
 					 BackgroundController = 0;
 				 else
 					 BackgroundController = 1;
+				 break;
+	}
+	case 'l':{
+				 if (SnitchController == 1)
+					 SnitchController = 0;
+				 else
+					 SnitchController = 1;
 				 break;
 	}
 	}

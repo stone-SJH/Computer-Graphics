@@ -38,6 +38,7 @@ private:
 	bool LightController0;
 	bool VortexController;
 	bool BackgroundController;
+	bool SnitchController;
 
 	bool tb_flag;
 	int invalid[TOTAL][TOTAL];

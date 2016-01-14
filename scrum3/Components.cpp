@@ -8,7 +8,7 @@ CueBall::CueBall(){
 	rot = 0;
 	directRotate = 0;
 	tools = new Tools();
-	cb_texture = tools->GetBmp(L"D:\\pictures\\perlin.bmp"); 
+	cb_texture = tools->GetBmp(L"perlin.bmp"); 
 }
 
 void CueBall::draw(){
@@ -165,13 +165,13 @@ void SnitchBall::get_new(){
 	if ((snitchrotate % drop_time) == 0){
 		//printf("drop!\n");
 		drop_flag = 1;
-		snitchz = -0.6f;
+		snitchz = 0.6f;
 		snitchx = snitchx * 9 / XEDGE;
 		snitchy = snitchy * 3.6 / YEDGE;
 	}
 	else{
 		drop_flag = 0;
-		snitchz = -3.5f;
+		snitchz = 3.5f;
 	}
 }
 
@@ -204,7 +204,7 @@ void SnitchBall::draw(){
 
 Carve::Carve(){
 	tools = new Tools();
-	cv_texture = tools->GetBmp(L"D:\\pictures\\background.bmp");
+	cv_texture = tools->GetBmp(L"background.bmp");
 	x = 15.0f;
 	y = 11.0f;
 	zmin = -1;
@@ -267,8 +267,8 @@ void Carve::setTex(){
 }
 Table::Table(){
 	tools = new Tools();
-	tb_bmp = tools->GetBmp(L"D:/pictures/table.bmp");
-	wd_bmp = tools->GetBmp(L"D:/pictures/wood.bmp");
+	tb_bmp = tools->GetBmp(L"table.bmp");
+	wd_bmp = tools->GetBmp(L"wood.bmp");
 	a_x = -1.0;
 	b_x = 1.0;
 }

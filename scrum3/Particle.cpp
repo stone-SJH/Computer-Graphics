@@ -186,7 +186,7 @@ void Particles::drawCollision(){
 
 Particles::Particles(){
 	tools = new Tools();
-	pt_texture = tools->GetBmp(L"D:\\pictures\\fire.bmp");
+	pt_texture = tools->GetBmp(L"fire.bmp");
 	x = 0;
 	y = 0;
 	z = 0;
@@ -230,7 +230,7 @@ Particles::Particles(float xpos, float ypos, float zpos){
 
 Particles::Particles(float xpos, float ypos, float zpos, float rr, float gg, float bb, float rotate){
 	tools = new Tools();
-	pt_texture = tools->GetBmp(L"D:\\pictures\\fire.bmp");
+	pt_texture = tools->GetBmp(L"fire.bmp");
 	x = xpos;
 	y = ypos;
 	z = zpos;
