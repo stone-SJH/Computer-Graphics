@@ -17,13 +17,13 @@
 #define R 0.24
 #define XEDGE  12
 #define YEDGE  6
-#define PAD  0.6
+#define PAD  1
 #define TAB 0.5
 #define MAXP 400
 #define PRRANGE 80 //粒子发散角度
 #define SECTION 200
 #define VORTEXNUM 6
-static GLfloat colors[12][3] =                // 彩虹颜色
+static GLfloat colors[12][3] = // 彩虹颜色
 {
 	{ 1.0f, 0.5f, 0.5f }, { 1.0f, 0.75f, 0.5f }, { 1.0f, 1.0f, 0.5f }, { 0.75f, 1.0f, 0.5f },
 	{ 0.5f, 1.0f, 0.5f }, { 0.5f, 1.0f, 0.75f }, { 0.5f, 1.0f, 1.0f }, { 0.5f, 0.75f, 1.0f },
